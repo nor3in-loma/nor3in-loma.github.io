@@ -589,6 +589,8 @@ Error generating stack: `+i.message+`
 .xo-cell.xo-win{background:linear-gradient(135deg,var(--pink),var(--acc));border:0;box-shadow:0 8px 24px rgba(244,114,182,.45)}
 .xo-me{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:0 14px;margin-inline-start:8px;font-size:.85rem;color:var(--soft)}
 </style>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem("nlSess")||"null");if(s&&s.who)localStorage.setItem("xoWho",s.who);else localStorage.removeItem("xoWho")}catch(e){}})();</script>
+<style>#xoWho,#domWho{display:none!important}</style>
 <script>
 (function(){
 "use strict";
@@ -1393,18 +1395,42 @@ setTimeout(function(){if(who)ensureClient(function(){})},1800);
 <script>
 (function(){
 "use strict";
-var BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
-var BASE="nor3in-loma-pres/v1/";
-var NAMES={X:"لوما",O:"نورعين"};
+var SB="https://utujojbvhmrrqvgztirl.supabase.co";
+var KEY="sb_publishable_w6ZcWksA7Omlr__aM_pRVQ_LyxyFRLB";
+var ACC={X:{email:"loma@nor3in.com",name:"لوما"},O:{email:"nor3in@nor3in.com",name:"نورعين"}};
 var ARD="٠١٢٣٤٥٦٧٨٩";
-var CID="pr"+Math.random().toString(36).slice(2,10);
-var client=null,ok=false,tryN=0,hb=null,peer={on:false,t:0};
-var who=null;
-try{who=localStorage.getItem("xoWho");if(who!=="X"&&who!=="O")who=null}catch(e){}
+var sess=null,peer={on:false,t:0},started=false;
 function $(i){return document.getElementById(i)}
 function ar(n){return String(n).replace(/\d/g,function(d){return ARD[+d]})}
-function other(){return who==="X"?"O":"X"}
+function other(){return sess.who==="X"?"O":"X"}
 function visible(){return document.visibilityState!=="hidden"}
+function loadSess(){try{var s=JSON.parse(localStorage.getItem("nlSess")||"null");return s&&s.who&&s.refresh_token?s:null}catch(e){return null}}
+function saveSess(s){sess=s;try{localStorage.setItem("nlSess",JSON.stringify(s));localStorage.setItem("xoWho",s.who)}catch(e){}}
+function clearSess(){sess=null;try{localStorage.removeItem("nlSess");localStorage.removeItem("xoWho")}catch(e){}}
+function auth(path,body){
+  return fetch(SB+"/auth/v1/"+path,{method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})});
+}
+function fromTok(j,who){
+  return{who:who,access_token:j.access_token,refresh_token:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000};
+}
+function refresh(){
+  if(!sess)return Promise.reject();
+  return auth("token?grant_type=refresh_token",{refresh_token:sess.refresh_token}).then(function(r){
+    if(r.ok&&r.j.access_token){saveSess(fromTok(r.j,sess.who));return}
+    if(r.j&&(r.j.error_code||r.j.code)&&!(r.j.code>=500)){clearSess();location.reload()}
+    throw 0;
+  });
+}
+function tok(){
+  if(sess&&Date.now()<sess.exp)return Promise.resolve(sess.access_token);
+  return refresh().then(function(){return sess.access_token});
+}
+function rest(method,path,body,keep){
+  return tok().then(function(t){
+    return fetch(SB+"/rest/v1/"+path,{method:method,keepalive:!!keep,headers:{"apikey":KEY,"Authorization":"Bearer "+t,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=representation"},body:body?JSON.stringify(body):undefined});
+  });
+}
 function ago(ms){
   var m=Math.floor(ms/60000);
   if(m<1)return "نشط من أقل من دقيقة";
@@ -1422,96 +1448,115 @@ function ago(ms){
   if(d===2)return "نشط من يومين";
   return "نشط من "+ar(d)+" أيام";
 }
-function box(){
+/* ---------- login gate ---------- */
+function gate(){
+  var g=document.createElement("div");g.id="nlGate";
+  g.setAttribute("style","position:fixed;inset:0;z-index:2147483647;background:linear-gradient(160deg,#2a1346,#0f0a1e);color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl;font-family:inherit");
+  var c=document.createElement("div");
+  c.setAttribute("style","width:100%;max-width:360px;text-align:center");
+  var h=document.createElement("div");h.textContent="🔐 مين اللي داخل؟";h.setAttribute("style","font-size:24px;font-weight:800;margin-bottom:18px");
+  var row=document.createElement("div");row.setAttribute("style","display:flex;gap:10px;margin-bottom:14px");
+  var pick=null,signup=false;
+  var st="padding:12px;border-radius:14px;border:2px solid transparent;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;";
+  var btns={};
+  ["X","O"].forEach(function(k){
+    var b=document.createElement("button");b.type="button";b.id="nlPick"+k;b.textContent=ACC[k].name;
+    b.setAttribute("style",st+"flex:1;background:rgba(255,255,255,.14);color:#fff");
+    b.addEventListener("click",function(){pick=k;["X","O"].forEach(function(q){btns[q].style.borderColor=q===k?"#ff7ab8":"transparent"})});
+    btns[k]=b;row.appendChild(b);
+  });
+  var inp="width:100%;box-sizing:border-box;padding:12px;border-radius:14px;border:0;font-size:16px;margin-bottom:10px;text-align:center;font-family:inherit;";
+  var p1=document.createElement("input");p1.type="password";p1.id="nlPw";p1.placeholder="الباسورد";p1.autocomplete="current-password";p1.setAttribute("style",inp);
+  var p2=document.createElement("input");p2.type="password";p2.id="nlPw2";p2.placeholder="اكتب الباسورد تاني";p2.autocomplete="new-password";p2.setAttribute("style",inp+"display:none");
+  var go=document.createElement("button");go.type="button";go.id="nlGo";go.textContent="دخول";
+  go.setAttribute("style",st+"width:100%;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;border:0");
+  var er=document.createElement("div");er.id="nlErr";er.setAttribute("style","min-height:22px;margin:10px 0;color:#ffb3c8;font-weight:700;font-size:14px");
+  var tg=document.createElement("button");tg.type="button";tg.id="nlToggle";tg.textContent="أول مرة؟ اعمل حسابك";
+  tg.setAttribute("style","background:none;border:0;color:#cdb8ff;text-decoration:underline;font-family:inherit;font-size:14px;cursor:pointer");
+  tg.addEventListener("click",function(){
+    signup=!signup;p2.style.display=signup?"":"none";go.textContent=signup?"إنشاء الحساب":"دخول";
+    tg.textContent=signup?"عندي حساب، دخول":"أول مرة؟ اعمل حسابك";p1.autocomplete=signup?"new-password":"current-password";er.textContent="";
+  });
+  var busy=false;
+  function fail(m){er.textContent=m;busy=false;go.disabled=false}
+  function submit(){
+    if(busy)return;
+    if(!pick)return fail("اختار الاسم الأول");
+    if(p1.value.length<6)return fail("الباسورد لازم 6 حروف أو أرقام على الأقل");
+    if(signup&&p1.value!==p2.value)return fail("الباسوردين مش زي بعض");
+    busy=true;go.disabled=true;er.textContent="ثانية...";
+    var who=pick,email=ACC[who].email,pw=p1.value;
+    function login(){
+      return auth("token?grant_type=password",{email:email,password:pw}).then(function(r){
+        if(r.ok&&r.j.access_token){saveSess(fromTok(r.j,who));location.reload();return}
+        if(r.j&&r.j.error_code==="invalid_credentials")return fail("الباسورد غلط");
+        fail("حصلت مشكلة، جرب تاني");
+      });
+    }
+    var run=signup?auth("signup",{email:email,password:pw}).then(function(r){
+      if(r.ok&&(r.j.access_token||r.j.id)){return login()}
+      if(r.j&&(r.j.error_code==="user_already_exists"||/already/i.test(r.j.msg||r.j.message||"")))return fail("الحساب دا اتعمل قبل كدا، دوس دخول");
+      fail("مقدرتش أعمل الحساب");
+    }):login();
+    run.catch(function(){fail("النت فيه مشكلة، جرب تاني")});
+  }
+  go.addEventListener("click",submit);
+  [p1,p2].forEach(function(i){i.addEventListener("keydown",function(e){if(e.key==="Enter")submit()})});
+  c.appendChild(h);c.appendChild(row);c.appendChild(p1);c.appendChild(p2);c.appendChild(go);c.appendChild(er);c.appendChild(tg);
+  g.appendChild(c);document.documentElement.appendChild(g);
+}
+/* ---------- presence ---------- */
+function pill(){
   var b=$("presPill");
   if(!b){
     b=document.createElement("div");b.id="presPill";
-    b.setAttribute("style","position:fixed;bottom:12px;left:12px;z-index:2147483000;display:none;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(30,20,50,.82);color:#fff;font-weight:700;font-size:14px;direction:rtl;box-shadow:0 6px 20px rgba(0,0,0,.35);font-family:inherit;pointer-events:none");
-    var dot=document.createElement("span");dot.id="presDot";
-    dot.setAttribute("style","width:11px;height:11px;border-radius:50%;display:inline-block;flex:none");
+    b.setAttribute("style","position:fixed;bottom:12px;left:12px;z-index:2147483000;display:none;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(30,20,50,.82);color:#fff;font-weight:700;font-size:14px;direction:rtl;box-shadow:0 6px 20px rgba(0,0,0,.35);font-family:inherit");
+    var dot=document.createElement("span");dot.id="presDot";dot.setAttribute("style","width:11px;height:11px;border-radius:50%;display:inline-block;flex:none");
     var tx=document.createElement("span");tx.id="presTxt";
-    b.appendChild(dot);b.appendChild(tx);document.body.appendChild(b);
+    var lo=document.createElement("button");lo.type="button";lo.id="presOut";lo.textContent="خروج";
+    lo.setAttribute("style","margin-inline-start:6px;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:3px 10px;font-size:12px;font-family:inherit;cursor:pointer");
+    lo.addEventListener("click",function(){
+      var done=function(){clearSess();location.reload()};
+      send(false,true).then(done,done);
+    });
+    b.appendChild(dot);b.appendChild(tx);b.appendChild(lo);document.body.appendChild(b);
   }
   return b;
 }
 function render(){
-  if(!who)return;
-  var b=box(),dot=$("presDot"),tx=$("presTxt");
-  var nm=NAMES[other()];
+  if(!sess)return;
+  var b=pill(),dot=$("presDot"),tx=$("presTxt"),nm=ACC[other()].name;
   var fresh=peer.on&&peer.t&&Date.now()-peer.t<60000;
-  if(fresh){
-    b.style.display="flex";dot.style.background="#31d158";dot.style.boxShadow="0 0 8px #31d158";
-    tx.textContent=nm+" · متصل الآن";
-  }else if(peer.t){
-    b.style.display="flex";dot.style.background="#8a8a95";dot.style.boxShadow="none";
-    tx.textContent=nm+" · "+ago(Date.now()-peer.t);
-  }else{b.style.display="none"}
+  b.style.display="flex";
+  if(fresh){dot.style.background="#31d158";dot.style.boxShadow="0 0 8px #31d158";tx.textContent=nm+" · متصل الآن"}
+  else if(peer.t){dot.style.background="#8a8a95";dot.style.boxShadow="none";tx.textContent=nm+" · "+ago(Date.now()-peer.t)}
+  else{dot.style.background="#8a8a95";dot.style.boxShadow="none";tx.textContent=nm+" · لسه ماشفناش نشاط"}
 }
-function pub(on){
-  if(!client||!ok||!who)return;
-  try{client.publish(BASE+who,JSON.stringify({on:on?1:0,t:Date.now()}),{qos:0,retain:true})}catch(e){}
+function send(on,keep){
+  if(!sess)return Promise.resolve();
+  return rest("POST","presence?on_conflict=name",{name:sess.who,online:!!on,last_seen:new Date().toISOString()},keep).catch(function(){});
 }
-function beat(){ if(visible())pub(true) }
-function connect(){
-  if(!who||!window.mqtt)return;
-  if(client){try{client.end(true)}catch(e){}client=null;ok=false}
-  var c=mqtt.connect(BROKERS[tryN%BROKERS.length],{clientId:"nor3in-"+CID,reconnectPeriod:3000,connectTimeout:7000,clean:true});
-  tryN++;client=c;
-  var to=setTimeout(function(){if(!ok&&client===c)connect()},9000);
-  c.on("connect",function(){
-    clearTimeout(to);ok=true;
-    c.subscribe(BASE+other(),{qos:0});
-    beat();
-  });
-  c.on("message",function(t,p){
-    if(t!==BASE+other())return;
-    try{var d=JSON.parse(p.toString());
-      if(d&&d.t){peer={on:!!d.on,t:+d.t};try{localStorage.setItem("presPeer",JSON.stringify(peer))}catch(e){}render()}
-    }catch(e){}
-  });
-  c.on("close",function(){ok=false});
-  c.on("error",function(){});
+function poll(){
+  if(!sess)return;
+  rest("GET","presence?select=online,last_seen&name=eq."+other()).then(function(r){return r.json()}).then(function(a){
+    if(a&&a[0]){peer={on:!!a[0].online,t:Date.parse(a[0].last_seen)||0};render()}
+  }).catch(function(){});
 }
-function load(cb){
-  if(window.mqtt){cb();return}
-  var s=document.createElement("script");s.src="mqtt.min.js";s.onload=cb;s.onerror=function(){setTimeout(function(){load(cb)},5000)};
-  document.head.appendChild(s);
-}
+function beat(){ if(visible())send(true) }
 function start(){
-  try{var p=JSON.parse(localStorage.getItem("presPeer")||"null");if(p&&p.t)peer=p}catch(e){}
-  render();
-  load(connect);
-  hb=setInterval(beat,20000);
-  setInterval(render,15000);
-  document.addEventListener("visibilitychange",function(){
-    if(visible()){if(client&&ok)beat();else load(connect)}else pub(false);
-  });
-  window.addEventListener("pagehide",function(){pub(false)});
-  window.addEventListener("online",function(){load(connect)});
-}
-function ask(){
-  var b=document.createElement("div");b.id="presAsk";
-  b.setAttribute("style","position:fixed;bottom:12px;left:12px;right:12px;z-index:2147483000;padding:12px;border-radius:18px;background:rgba(30,20,50,.92);color:#fff;text-align:center;font-weight:800;direction:rtl;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.4)");
-  var t=document.createElement("div");t.textContent="مين بيفتح الموقع؟";
-  var r=document.createElement("div");r.setAttribute("style","display:flex;gap:10px;margin-top:10px");
-  [["X","لوما"],["O","نورعين"]].forEach(function(k){
-    var x=document.createElement("button");x.type="button";x.id="presPick"+k[0];x.textContent=k[1];
-    x.setAttribute("style","flex:1;padding:10px;border:0;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;background:#fff;color:#6a2cc9");
-    x.addEventListener("click",function(){
-      who=k[0];try{localStorage.setItem("xoWho",who)}catch(e){}
-      location.reload();
-    });
-    r.appendChild(x);
-  });
-  b.appendChild(t);b.appendChild(r);document.body.appendChild(b);
+  if(started)return;started=true;
+  render();beat();poll();
+  setInterval(beat,20000);
+  setInterval(poll,8000);
+  setInterval(render,10000);
+  document.addEventListener("visibilitychange",function(){if(visible()){beat();poll()}else send(false,true)});
+  window.addEventListener("pagehide",function(){send(false,true)});
 }
 function init(){
-  if(who){start();return}
-  ask();
-  var iv=setInterval(function(){
-    var w=null;try{w=localStorage.getItem("xoWho")}catch(e){}
-    if(w==="X"||w==="O"){clearInterval(iv);who=w;var a=$("presAsk");if(a&&a.parentNode)a.parentNode.removeChild(a);start()}
-  },1500);
+  sess=loadSess();
+  if(!sess){gate();return}
+  try{localStorage.setItem("xoWho",sess.who)}catch(e){}
+  start();
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
