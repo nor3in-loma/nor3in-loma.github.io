@@ -1540,12 +1540,28 @@ function pill(){
       var done=function(){clearSess();location.reload()};
       send(false,true).then(done,done);
     });
-    var lt=null;
-    var cancel=function(){if(lt){clearTimeout(lt);lt=null}};
-    b.style.userSelect="none";b.style.webkitUserSelect="none";b.style.webkitTouchCallout="none";b.style.touchAction="manipulation";
-    b.addEventListener("pointerdown",function(){cancel();lt=setTimeout(function(){lt=null;if(confirm("تسجيل الخروج من هذا الجهاز؟")){var done=function(){clearSess();location.reload()};send(false,true).then(done,done)}},800)});
-    ["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(e){b.addEventListener(e,cancel)});
-    b.addEventListener("contextmenu",function(e){e.preventDefault()});
+    b.style.cursor="pointer";b.style.userSelect="none";b.style.webkitUserSelect="none";b.style.touchAction="manipulation";
+    var menu=null;
+    var closeMenu=function(){if(menu){menu.remove();menu=null}};
+    var bs="border:0;border-radius:10px;padding:10px 16px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;";
+    var mk=function(t,st,fn){var x=document.createElement("button");x.type="button";x.textContent=t;x.setAttribute("style",bs+st);x.addEventListener("click",function(ev){ev.stopPropagation();fn()});return x};
+    var openMenu=function(){
+      closeMenu();
+      menu=document.createElement("div");menu.id="presMenu";
+      menu.setAttribute("style","position:fixed;top:56px;left:12px;z-index:2147483001;display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:rgba(30,20,50,.96);color:#fff;direction:rtl;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:inherit;min-width:150px");
+      menu.addEventListener("click",function(ev){ev.stopPropagation()});
+      var showOut=function(){
+        menu.textContent="";
+        var q=document.createElement("div");q.textContent="تسجيل الخروج من هذا الجهاز؟";q.setAttribute("style","font-size:14px;font-weight:700;margin-bottom:2px");
+        menu.appendChild(q);
+        menu.appendChild(mk("نعم، خروج","background:#e5484d;color:#fff;",function(){var done=function(){clearSess();location.reload()};send(false,true).then(done,done)}));
+        menu.appendChild(mk("إلغاء","background:rgba(255,255,255,.18);color:#fff;",closeMenu));
+      };
+      menu.appendChild(mk("خروج","background:rgba(255,255,255,.18);color:#fff;",showOut));
+      document.body.appendChild(menu);
+    };
+    b.addEventListener("click",function(ev){ev.stopPropagation();if(menu)closeMenu();else openMenu()});
+    document.addEventListener("click",closeMenu);
     b.appendChild(dot);b.appendChild(tx);document.body.appendChild(b);
   }
   return b;
