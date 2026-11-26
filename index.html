@@ -317,7 +317,7 @@ Error generating stack: `+i.message+`
     <div id="xoMenu">
       <div class="card" style="margin-bottom:12px">
         <div style="font-size:44px;line-height:1.4">❌⭕</div>
-        <div class="note" style="margin:6px 0 0">واحد يعمل لعبة جديدة ويبعت الكود للتاني، وتلعبوا مع بعض أونلاين ♥️</div>
+        <div class="note" style="margin:6px 0 0">اللي يعمل لعبة جديدة هو كوكو ❌ ويبعت الكود لكتكوتي ⭕ وتلعبوا مع بعض أونلاين ♥️</div>
       </div>
       <button class="btn pri" id="xoCreate" type="button" style="margin-top:0">✨ لعبة جديدة</button>
       <button class="btn" id="xoJoinBtn" type="button">🔑 عندي كود لعبة</button>
@@ -335,7 +335,7 @@ Error generating stack: `+i.message+`
           <div id="xoCodeShow" dir="ltr" style="font-size:34px;font-weight:800;letter-spacing:8px;color:var(--pink2)"></div>
           <button class="btn" id="xoCopy" type="button" style="width:auto;margin:0;padding:6px 14px;font-size:.85rem">📋 نسخ</button>
         </div>
-        <div class="note" id="xoPeer" style="margin:4px 0 0">🔴 الطرف التاني لسه ما دخلش</div>
+        <div class="note" id="xoPeer" style="margin:4px 0 0">🔴 لسه ما دخلش حد</div>
       </div>
       <div id="xoStatus" class="xo-status" aria-live="polite"></div>
       <div class="xo-board" id="xoBoard" dir="ltr"></div>
@@ -470,6 +470,8 @@ var CID="xo"+Math.random().toString(36).slice(2,10);
 var ARD="٠١٢٣٤٥٦٧٨٩";
 var client=null,clientOk=false,brokerTry=0,connTimer=null;
 var code=null,myMark=null,state=null,subbed=false;
+var NM={X:"كوكو",O:"كتكوتي"};
+function other(m){return m==="X"?"O":"X"}
 var lastPeer=0,pingT=null;
 function byId(i){return document.getElementById(i)}
 function toAr(n){return String(n).replace(/\d/g,function(d){return ARD[+d]})}
@@ -547,7 +549,8 @@ function newState(round){
 function renderPeer(){
   var e=byId("xoPeer");if(!e)return;
   var on=Date.now()-lastPeer<12000;
-  e.textContent=on?"🟢 الطرف التاني متصل دلوقتي":"🔴 الطرف التاني مش متصل";
+  var on_=NM[myMark?other(myMark):"O"];
+  e.textContent=on?("🟢 "+on_+" متصل"+(on_==="كتكوتي"?"ة":"")+" دلوقتي"):("🔴 "+on_+" مش متصل"+(on_==="كتكوتي"?"ة":""));
 }
 
 function render(){
@@ -571,10 +574,11 @@ function render(){
   var meTag=myMark==="X"?"❌":"⭕";
   if(state.winner){
     if(state.winner==="D")st.innerHTML="تعادل 🤝";
-    else if(state.winner===myMark)st.innerHTML="مبروووك كسبت 🎉♥️";
-    else st.innerHTML="الطرف التاني كسب الجولة دي 😅";
+    else if(state.winner===myMark)st.innerHTML="مبروووك يا "+NM[myMark]+" كسبت 🎉♥️";
+    else st.innerHTML=NM[state.winner]+" كسب"+(state.winner==="O"?"ت":"")+" الجولة دي 😅";
   }else{
-    st.innerHTML=(state.turn===myMark?"دورك دلوقتي 💜":"مستني الطرف التاني يلعب...")+' <span class="xo-me">انت '+meTag+'</span>';
+    var tm=state.turn==="X"?"❌":"⭕";
+    st.innerHTML="دور "+NM[state.turn]+" "+tm+(state.turn===myMark?" (دورك) 💜":"")+' <span class="xo-me">انت '+NM[myMark]+" "+meTag+'</span>';
   }
   renderPeer();
 }
@@ -583,7 +587,7 @@ function tap(i){
   if(!state||!clientOk)return;
   if(state.winner){msg("دوسي جولة جديدة عشان تلعبوا تاني");return}
   if(state.board[i]!==".")return;
-  if(state.turn!==myMark){msg("مش دورك دلوقتي 😅");return}
+  if(state.turn!==myMark){msg("مش دورك دلوقتي، دور "+NM[state.turn]+" 😅");return}
   var b=state.board.split("");b[i]=myMark;
   var w=winnerOf(b);
   state.board=b.join("");
