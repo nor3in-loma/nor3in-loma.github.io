@@ -1505,6 +1505,27 @@ function gate(){
   c.appendChild(h);c.appendChild(row);c.appendChild(p1);c.appendChild(p2);c.appendChild(go);c.appendChild(er);
   g.appendChild(c);document.documentElement.appendChild(g);
 }
+
+/* ---------- gendered wording ---------- */
+var GP=[["ادخل","ادخلي"],["اتأكد","اتأكدي"],["جرب","جربي"],["اكتب","اكتبي"],["ابدأ","ابدئي"],["ارجع","ارجعي"],["اسحب","اسحبي"],["انسخه","انسخيه"],["دوس","دوسي"],["عدّ","عدّي"],["اختار","اختاري"],["استنى","استني"]];
+var GA="\u0600-\u06ff";
+var GR=GP.map(function(p){return[new RegExp("(^|[^"+GA+"])"+p[0]+"(?![" +GA+"])","g"),new RegExp("(^|[^"+GA+"])"+p[1]+"(?![" +GA+"])","g"),p]});
+function gfix(t){
+  var girl=sess&&sess.who==="O",o=t;
+  GR.forEach(function(r){o=girl?o.replace(r[0],"$1"+r[2][1]):o.replace(r[1],"$1"+r[2][0])});
+  return o;
+}
+function gwalk(n){
+  if(n.nodeType===3){var v=n.nodeValue;if(v&&/[\u0600-\u06ff]/.test(v)){var w=gfix(v);if(w!==v)n.nodeValue=w}return}
+  if(n.nodeType!==1||n.tagName==="SCRIPT"||n.tagName==="STYLE"||n.tagName==="TEXTAREA")return;
+  for(var c=n.firstChild;c;c=c.nextSibling)gwalk(c);
+}
+function gstart(){
+  gwalk(document.body);
+  new MutationObserver(function(ms){ms.forEach(function(m){
+    if(m.type==="characterData")gwalk(m.target);else m.addedNodes.forEach(gwalk);
+  })}).observe(document.body,{childList:true,subtree:true,characterData:true});
+}
 /* ---------- presence ---------- */
 function pill(){
   var b=$("presPill");
@@ -1528,7 +1549,7 @@ function render(){
   var b=pill(),dot=$("presDot"),tx=$("presTxt"),nm=ACC[other()].name;
   var fresh=peer.on&&peer.t&&Date.now()-peer.t<60000;
   b.style.display="flex";
-  if(fresh){dot.style.background="#31d158";dot.style.boxShadow="0 0 8px #31d158";tx.textContent=nm+" · متصل الآن"}
+  if(fresh){dot.style.background="#31d158";dot.style.boxShadow="0 0 8px #31d158";tx.textContent=nm+" · متصل"+(other()==="O"?"ة":"")+" الآن"}
   else if(peer.t){dot.style.background="#8a8a95";dot.style.boxShadow="none";tx.textContent=nm+" · "+ago(Date.now()-peer.t)}
   else{dot.style.background="#8a8a95";dot.style.boxShadow="none";tx.textContent=nm+" · لسه ماشفناش نشاط"}
 }
@@ -1545,7 +1566,7 @@ function poll(){
 function beat(){ if(visible())send(true) }
 function start(){
   if(started)return;started=true;
-  render();beat();poll();
+  gstart();render();beat();poll();
   setInterval(beat,20000);
   setInterval(poll,8000);
   setInterval(render,10000);
