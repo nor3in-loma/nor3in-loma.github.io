@@ -500,8 +500,38 @@ function showInvite(from,c){
   r.appendChild(j);r.appendChild(x);b.appendChild(tx);b.appendChild(r);
   var ov=byId("xoOv");(ov&&ov.open?ov:document.body).appendChild(b);
 }
+var presT=null,presHide=null,lastReply=0;
+function ovOpen(){var o=byId("xoOv");return !!(o&&o.open)}
+function announce(r){
+  if(!who)return;
+  ensureClient(function(){
+    try{client.publish(LOBBY,JSON.stringify({type:"here",from:who,id:CID,t:Date.now(),r:r?1:0}),{qos:0})}catch(e){}
+  });
+}
+function hidePres(){var b=byId("xoPres");if(b&&b.parentNode)b.parentNode.removeChild(b);if(presHide){clearTimeout(presHide);presHide=null}}
+function showPres(from){
+  hidePres();
+  var b=document.createElement("div");b.id="xoPres";
+  b.setAttribute("style","position:fixed;top:12px;left:12px;right:12px;z-index:2147483646;padding:14px;border-radius:18px;background:linear-gradient(135deg,#34c38f,#2a8cff);color:#fff;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.45);font-weight:800;font-size:16px;font-family:inherit");
+  var tx=document.createElement("div");tx.textContent="🎮 "+NM[from]+" في اللعبة!";
+  var r=document.createElement("div");r.setAttribute("style","display:flex;gap:10px;margin-top:10px");
+  var st="flex:1;padding:10px;border:0;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;";
+  var j=document.createElement("button");j.type="button";j.id="xoPresGo";j.textContent="ادخل اللعبة 💜";j.setAttribute("style",st+"background:#fff;color:#1b6fd1");
+  var x=document.createElement("button");x.type="button";x.id="xoPresX";x.textContent="تمام";x.setAttribute("style",st+"background:rgba(255,255,255,.25);color:#fff");
+  r.appendChild(j);r.appendChild(x);b.appendChild(tx);b.appendChild(r);
+  var ov=byId("xoOv");(ov&&ov.open?ov:document.body).appendChild(b);
+  presHide=setTimeout(hidePres,15000);
+}
 function onLobby(payload){
   var d;try{d=JSON.parse(payload.toString())}catch(e){return}
+  if(d&&d.type==="here"){
+    if(!who||d.id===CID||d.from===who)return;
+    if(Date.now()-(d.t||0)>60000)return;
+    if(code)return;
+    showPres(d.from);
+    if(!d.r&&ovOpen()&&Date.now()-lastReply>5000){lastReply=Date.now();announce(true)}
+    return;
+  }
   if(!who||!d||!d.code||d.from===who||d.id===CID)return;
   if(Date.now()-(d.t||0)>60000)return;
   if(code===d.code||dismissed[d.code])return;
@@ -698,6 +728,7 @@ function refreshResume(){
 
 function openOv(){
   var ov=byId("xoOv");if(!ov)return;
+  hidePres();announce(false);if(presT)clearInterval(presT);presT=setInterval(function(){if(ovOpen())announce(false);else{clearInterval(presT);presT=null}},20000);
   refreshResume();msg("");if(!code)showWho();
   if(!ov.open){try{ov.showModal()}catch(e){ov.setAttribute("open","")}}
 }
@@ -716,7 +747,7 @@ document.addEventListener("click",function(e){
       who=t.id==="xoWhoX"?"X":"O";
       try{localStorage.setItem("xoWho",who)}catch(err){}
       showWho();
-      lobbyOn();
+      lobbyOn();if(ovOpen())announce(false);
       if(pendingCode){var pc=pendingCode;pendingCode=null;startJoin(pc,null)}
       break;
     case "xoInvJoin":
@@ -725,6 +756,8 @@ document.addEventListener("click",function(e){
       break;
     case "xoInvX":dismissed[t.getAttribute("data-c")]=1;hideInvite();break;
     case "xoX":closeOv();break;
+    case "xoPresGo":hidePres();if(!ovOpen())openOv();break;
+    case "xoPresX":hidePres();break;
     case "xoCreate":startCreate();break;
     case "xoJoinBtn":
       var box=byId("xoJoinBox");
