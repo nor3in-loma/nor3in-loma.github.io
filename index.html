@@ -1540,6 +1540,12 @@ function pill(){
       var done=function(){clearSess();location.reload()};
       send(false,true).then(done,done);
     });
+    var lt=null;
+    var cancel=function(){if(lt){clearTimeout(lt);lt=null}};
+    b.style.userSelect="none";b.style.webkitUserSelect="none";b.style.webkitTouchCallout="none";b.style.touchAction="manipulation";
+    b.addEventListener("pointerdown",function(){cancel();lt=setTimeout(function(){lt=null;if(confirm("تسجيل الخروج من هذا الجهاز؟")){var done=function(){clearSess();location.reload()};send(false,true).then(done,done)}},800)});
+    ["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(e){b.addEventListener(e,cancel)});
+    b.addEventListener("contextmenu",function(e){e.preventDefault()});
     b.appendChild(dot);b.appendChild(tx);document.body.appendChild(b);
   }
   return b;
