@@ -318,6 +318,7 @@ Error generating stack: `+i.message+`
       <div class="card" style="margin-bottom:12px"><div style="font-size:40px;line-height:1.4">💜</div><div class="note" style="margin:6px 0 0">انت مين؟ (مرة واحدة بس ومش هسألك تاني)</div></div>
       <button class="btn pri" id="xoWhoX" type="button" style="margin-top:0">❌ أنا كوكو</button>
       <button class="btn pri" id="xoWhoO" type="button">⭕ أنا كتكوتي</button>
+      <button class="btn" id="soloGo1" type="button">🤖 العب لوحدك (ضيف)</button>
     </div>
     <div id="xoMenu">
       <div class="card" style="margin-bottom:12px">
@@ -326,6 +327,7 @@ Error generating stack: `+i.message+`
       </div>
       <button class="btn pri" id="xoCreate" type="button" style="margin-top:0">✨ لعبة جديدة</button>
       <button class="btn" id="xoJoinBtn" type="button">🔑 عندي كود لعبة</button>
+      <button class="btn" id="soloGo2" type="button">🤖 العب لوحدك ضد الموبايل</button>
       <div id="xoJoinBox" style="display:none;margin-top:12px">
         <input id="xoCodeIn" type="text" inputmode="numeric" autocomplete="off" placeholder="اكتب الكود هنا" style="width:100%;box-sizing:border-box;text-align:center;font-size:26px;font-weight:800;letter-spacing:6px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--glass);color:var(--ink);font-family:inherit">
         <button class="btn pri" id="xoJoinGo" type="button">دخول اللعبة 💜</button>
@@ -349,6 +351,25 @@ Error generating stack: `+i.message+`
         <button class="btn" id="xoLeave" type="button" style="margin:0">🚪 خروج من اللعبة</button>
       </div>
       <div class="note" id="xoMsg2" style="min-height:1.6em;text-align:center"></div>
+    </div>
+    <div id="soloBox" style="display:none">
+      <div id="soloPick">
+        <div class="card" style="margin-bottom:12px"><div style="font-size:40px;line-height:1.4">🤖</div><div class="note" style="margin:6px 0 0">العب لوحدك ضد الموبايل، اختار المستوى</div></div>
+        <button class="btn pri" id="soloEasy" type="button" style="margin-top:0">😊 سهل</button>
+        <button class="btn pri" id="soloMid" type="button">😎 وسط</button>
+        <button class="btn pri" id="soloHard" type="button">🔥 صعب (مستحيل تكسبه)</button>
+        <button class="btn" id="soloBack" type="button">⬅️ رجوع</button>
+      </div>
+      <div id="soloPlay" style="display:none">
+        <div id="soloStatus" class="xo-status" aria-live="polite"></div>
+        <div class="note" id="soloScore" style="text-align:center;margin:2px 0 0"></div>
+        <div class="xo-board" id="soloBoard" dir="ltr"></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn pri" id="soloAgain" type="button" style="margin:0">🔄 جولة جديدة</button>
+          <button class="btn" id="soloLvl" type="button" style="margin:0">🎚️ غيّر المستوى</button>
+          <button class="btn" id="soloExit" type="button" style="margin:0">🚪 خروج</button>
+        </div>
+      </div>
     </div>
   </div>
 </dialog>
@@ -786,6 +807,82 @@ document.addEventListener("click",function(e){
 });
 setInterval(function(){if(code)renderPeer()},5000);
 setTimeout(lobbyOn,1500);
+})();
+</script>
+<script>
+(function(){
+"use strict";
+function $(i){return document.getElementById(i)}
+var L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+var lvl="easy",bd=[],over=true,pStart=true,busy=false,sc={w:0,l:0,d:0},tm=null,winLine=null;
+var NAMES={easy:"سهل",mid:"وسط",hard:"صعب"};
+function win(b){for(var i=0;i<8;i++){var l=L[i];if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[1]]===b[l[2]])return{m:b[l[0]],l:l}}return null}
+function empt(b){var r=[];for(var i=0;i<9;i++)if(!b[i])r.push(i);return r}
+function mm(b,turn,d){var w=win(b);if(w)return w.m==="O"?10-d:d-10;var e=empt(b);if(!e.length)return 0;
+ var best=turn==="O"?-99:99;
+ for(var k=0;k<e.length;k++){b[e[k]]=turn;var v=mm(b,turn==="O"?"X":"O",d+1);b[e[k]]="";
+  if(turn==="O"?v>best:v<best)best=v}
+ return best}
+function best(){var e=empt(bd),bv=-99,bm=[];
+ for(var k=0;k<e.length;k++){bd[e[k]]="O";var v=mm(bd,"X",1);bd[e[k]]="";if(v>bv){bv=v;bm=[e[k]]}else if(v===bv)bm.push(e[k])}
+ return bm[Math.floor(Math.random()*bm.length)]}
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+function findWin(m){var e=empt(bd);for(var k=0;k<e.length;k++){bd[e[k]]=m;var w=win(bd);bd[e[k]]="";if(w)return e[k]}return -1}
+function pick(){
+ var e=empt(bd);
+ if(lvl==="hard")return best();
+ if(lvl==="mid"){var m=findWin("O");if(m<0)m=findWin("X");if(m>=0)return m;if(!bd[4]&&Math.random()<.6)return 4;return rnd(e)}
+ return rnd(e)}
+function status(t){$("soloStatus").innerHTML=t}
+function draw(){
+ var el=$("soloBoard");
+ if(!el.children.length){for(var i=0;i<9;i++){(function(i){var b=document.createElement("button");b.type="button";b.className="xo-cell";b.addEventListener("click",function(){tap(i)});el.appendChild(b)})(i)}}
+ for(var j=0;j<9;j++){var c=el.children[j];c.textContent=bd[j]==="X"?"❌":(bd[j]==="O"?"⭕":"");c.classList.remove("xo-win");if(winLine&&winLine.indexOf(j)>=0)c.classList.add("xo-win")}
+ $("soloScore").textContent="مستوى "+NAMES[lvl]+" | انت: "+sc.w+" | الموبايل: "+sc.l+" | تعادل: "+sc.d}
+function finish(){
+ var w=win(bd);
+ if(w){over=true;winLine=w.l;if(w.m==="X"){sc.w++;status("مبروووك كسبت 🎉♥️")}else{sc.l++;status("الموبايل كسب الجولة دي 😅 جرب تاني")}draw();return true}
+ if(!empt(bd).length){over=true;sc.d++;status("تعادل 🤝");draw();return true}
+ return false}
+function tap(i){
+ if(over||busy||bd[i])return;
+ bd[i]="X";draw();
+ if(finish())return;
+ busy=true;status("الموبايل بيفكر... 🤔");
+ tm=setTimeout(function(){tm=null;bot();busy=false},450)}
+function bot(){
+ var m=pick();bd[m]="O";
+ if(!finish()){status("دورك ❌ 💜");draw()}}
+function round(){
+ if(tm){clearTimeout(tm);tm=null}
+ bd=["","","","","","","","",""];over=false;busy=false;winLine=null;draw();
+ if(pStart){status("دورك ❌ 💜")}
+ else{busy=true;status("الموبايل بيبدأ... 🤔");tm=setTimeout(function(){tm=null;bot();busy=false},450)}
+ pStart=!pStart}
+function show(id,on){var e=$(id);if(e)e.style.display=on?"":"none"}
+function enter(){
+ show("xoWho",false);show("xoMenu",false);show("xoGame",false);show("soloBox",true);show("soloPick",true);show("soloPlay",false)}
+function leave(){
+ if(tm){clearTimeout(tm);tm=null}
+ show("soloBox",false);busy=false;over=true;
+ var wh=null;try{wh=localStorage.getItem("xoWho")}catch(e){}
+ show("xoWho",wh!=="X"&&wh!=="O");show("xoMenu",wh==="X"||wh==="O")}
+function start(l){lvl=l;sc={w:0,l:0,d:0};pStart=true;show("soloPick",false);show("soloPlay",true);round()}
+document.addEventListener("click",function(e){
+ var t=e.target&&e.target.closest?e.target.closest("[id]"):null;if(!t)return;
+ switch(t.id){
+  case "soloGo1":case "soloGo2":enter();break;
+  case "soloEasy":start("easy");break;
+  case "soloMid":start("mid");break;
+  case "soloHard":start("hard");break;
+  case "soloBack":leave();break;
+  case "soloAgain":round();break;
+  case "soloLvl":if(tm){clearTimeout(tm);tm=null}busy=false;show("soloPlay",false);show("soloPick",true);break;
+  case "soloExit":leave();break;
+  case "xoX":if($("soloBox")&&$("soloBox").style.display!=="none")leave();break;
+ }
+});
+var ov=$("xoOv");if(ov)ov.addEventListener("close",function(){if($("soloBox")&&$("soloBox").style.display!=="none")leave()});
 })();
 </script>
 </body></html>
