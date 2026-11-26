@@ -490,6 +490,7 @@ function loadMqtt(cb){
 }
 
 function ensureClient(onReady){
+  if(!window.mqtt){loadMqtt(function(){ensureClient(onReady)});return}
   if(client&&clientOk){onReady();return}
   if(client){try{client.end(true)}catch(e){} client=null;clientOk=false}
   msg("بيوصل...");
