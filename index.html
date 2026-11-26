@@ -1390,4 +1390,123 @@ setInterval(function(){if(code&&mode==="online")renderPeer()},5000);
 setTimeout(function(){if(who)ensureClient(function(){})},1800);
 })();
 </script>
+<script>
+(function(){
+"use strict";
+var BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
+var BASE="nor3in-loma-pres/v1/";
+var NAMES={X:"لوما",O:"نورعين"};
+var ARD="٠١٢٣٤٥٦٧٨٩";
+var CID="pr"+Math.random().toString(36).slice(2,10);
+var client=null,ok=false,tryN=0,hb=null,peer={on:false,t:0};
+var who=null;
+try{who=localStorage.getItem("xoWho");if(who!=="X"&&who!=="O")who=null}catch(e){}
+function $(i){return document.getElementById(i)}
+function ar(n){return String(n).replace(/\d/g,function(d){return ARD[+d]})}
+function other(){return who==="X"?"O":"X"}
+function visible(){return document.visibilityState!=="hidden"}
+function ago(ms){
+  var m=Math.floor(ms/60000);
+  if(m<1)return "نشط من أقل من دقيقة";
+  if(m===1)return "نشط من دقيقة";
+  if(m===2)return "نشط من دقيقتين";
+  if(m<=10)return "نشط من "+ar(m)+" دقائق";
+  if(m<60)return "نشط من "+ar(m)+" دقيقة";
+  var h=Math.floor(m/60);
+  if(h===1)return "نشط من ساعة";
+  if(h===2)return "نشط من ساعتين";
+  if(h<=10)return "نشط من "+ar(h)+" ساعات";
+  if(h<24)return "نشط من "+ar(h)+" ساعة";
+  var d=Math.floor(h/24);
+  if(d===1)return "نشط من يوم";
+  if(d===2)return "نشط من يومين";
+  return "نشط من "+ar(d)+" أيام";
+}
+function box(){
+  var b=$("presPill");
+  if(!b){
+    b=document.createElement("div");b.id="presPill";
+    b.setAttribute("style","position:fixed;bottom:12px;left:12px;z-index:2147483000;display:none;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(30,20,50,.82);color:#fff;font-weight:700;font-size:14px;direction:rtl;box-shadow:0 6px 20px rgba(0,0,0,.35);font-family:inherit;pointer-events:none");
+    var dot=document.createElement("span");dot.id="presDot";
+    dot.setAttribute("style","width:11px;height:11px;border-radius:50%;display:inline-block;flex:none");
+    var tx=document.createElement("span");tx.id="presTxt";
+    b.appendChild(dot);b.appendChild(tx);document.body.appendChild(b);
+  }
+  return b;
+}
+function render(){
+  if(!who)return;
+  var b=box(),dot=$("presDot"),tx=$("presTxt");
+  var nm=NAMES[other()];
+  var fresh=peer.on&&peer.t&&Date.now()-peer.t<60000;
+  if(fresh){
+    b.style.display="flex";dot.style.background="#31d158";dot.style.boxShadow="0 0 8px #31d158";
+    tx.textContent=nm+" · متصل الآن";
+  }else if(peer.t){
+    b.style.display="flex";dot.style.background="#8a8a95";dot.style.boxShadow="none";
+    tx.textContent=nm+" · "+ago(Date.now()-peer.t);
+  }else{b.style.display="none"}
+}
+function pub(on){
+  if(!client||!ok||!who)return;
+  try{client.publish(BASE+who,JSON.stringify({on:on?1:0,t:Date.now()}),{qos:0,retain:true})}catch(e){}
+}
+function beat(){ if(visible())pub(true) }
+function connect(){
+  if(!who||!window.mqtt)return;
+  if(client){try{client.end(true)}catch(e){}client=null;ok=false}
+  var c=mqtt.connect(BROKERS[tryN%BROKERS.length],{clientId:"nor3in-"+CID,reconnectPeriod:3000,connectTimeout:7000,clean:true});
+  tryN++;client=c;
+  var to=setTimeout(function(){if(!ok&&client===c)connect()},9000);
+  c.on("connect",function(){
+    clearTimeout(to);ok=true;
+    c.subscribe(BASE+other(),{qos:0});
+    beat();
+  });
+  c.on("message",function(t,p){
+    if(t!==BASE+other())return;
+    try{var d=JSON.parse(p.toString());
+      if(d&&d.t){peer={on:!!d.on,t:+d.t};try{localStorage.setItem("presPeer",JSON.stringify(peer))}catch(e){}render()}
+    }catch(e){}
+  });
+  c.on("close",function(){ok=false});
+  c.on("error",function(){});
+}
+function load(cb){
+  if(window.mqtt){cb();return}
+  var s=document.createElement("script");s.src="mqtt.min.js";s.onload=cb;s.onerror=function(){setTimeout(function(){load(cb)},5000)};
+  document.head.appendChild(s);
+}
+function start(){
+  try{var p=JSON.parse(localStorage.getItem("presPeer")||"null");if(p&&p.t)peer=p}catch(e){}
+  render();
+  load(connect);
+  hb=setInterval(beat,20000);
+  setInterval(render,15000);
+  document.addEventListener("visibilitychange",function(){
+    if(visible()){if(client&&ok)beat();else load(connect)}else pub(false);
+  });
+  window.addEventListener("pagehide",function(){pub(false)});
+  window.addEventListener("online",function(){load(connect)});
+}
+function ask(){
+  var b=document.createElement("div");b.id="presAsk";
+  b.setAttribute("style","position:fixed;bottom:12px;left:12px;right:12px;z-index:2147483000;padding:12px;border-radius:18px;background:rgba(30,20,50,.92);color:#fff;text-align:center;font-weight:800;direction:rtl;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.4)");
+  var t=document.createElement("div");t.textContent="مين بيفتح الموقع؟";
+  var r=document.createElement("div");r.setAttribute("style","display:flex;gap:10px;margin-top:10px");
+  [["X","لوما"],["O","نورعين"]].forEach(function(k){
+    var x=document.createElement("button");x.type="button";x.id="presPick"+k[0];x.textContent=k[1];
+    x.setAttribute("style","flex:1;padding:10px;border:0;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;background:#fff;color:#6a2cc9");
+    x.addEventListener("click",function(){
+      who=k[0];try{localStorage.setItem("xoWho",who)}catch(e){}
+      if(b.parentNode)b.parentNode.removeChild(b);start();
+    });
+    r.appendChild(x);
+  });
+  b.appendChild(t);b.appendChild(r);document.body.appendChild(b);
+}
+function init(){ if(who)start();else ask() }
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
 </body></html>
