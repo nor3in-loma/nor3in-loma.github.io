@@ -1499,13 +1499,20 @@ function ask(){
     x.setAttribute("style","flex:1;padding:10px;border:0;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;background:#fff;color:#6a2cc9");
     x.addEventListener("click",function(){
       who=k[0];try{localStorage.setItem("xoWho",who)}catch(e){}
-      if(b.parentNode)b.parentNode.removeChild(b);start();
+      location.reload();
     });
     r.appendChild(x);
   });
   b.appendChild(t);b.appendChild(r);document.body.appendChild(b);
 }
-function init(){ if(who)start();else ask() }
+function init(){
+  if(who){start();return}
+  ask();
+  var iv=setInterval(function(){
+    var w=null;try{w=localStorage.getItem("xoWho")}catch(e){}
+    if(w==="X"||w==="O"){clearInterval(iv);who=w;var a=$("presAsk");if(a&&a.parentNode)a.parentNode.removeChild(a);start()}
+  },1500);
+}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 </script>
