@@ -314,10 +314,15 @@ Error generating stack: `+i.message+`
 <dialog class="dn-ov" id="xoOv" aria-label="لعبة إكس أو">
   <div class="dn-top"><button class="btn dn-x" id="xoX" type="button">✕ إغلاق</button><h2>إكس أو 🎮</h2></div>
   <div class="dn-body">
+    <div id="xoWho" style="display:none">
+      <div class="card" style="margin-bottom:12px"><div style="font-size:40px;line-height:1.4">💜</div><div class="note" style="margin:6px 0 0">انت مين؟ (مرة واحدة بس ومش هسألك تاني)</div></div>
+      <button class="btn pri" id="xoWhoX" type="button" style="margin-top:0">❌ أنا كوكو</button>
+      <button class="btn pri" id="xoWhoO" type="button">⭕ أنا كتكوتي</button>
+    </div>
     <div id="xoMenu">
       <div class="card" style="margin-bottom:12px">
         <div style="font-size:44px;line-height:1.4">❌⭕</div>
-        <div class="note" style="margin:6px 0 0">اللي يعمل لعبة جديدة هو كوكو ❌ ويبعت الكود لكتكوتي ⭕ وتلعبوا مع بعض أونلاين ♥️</div>
+        <div class="note" style="margin:6px 0 0">دوس لعبة جديدة والتاني بيوصله إشعار على طول، أو ادخل بالكود، وتلعبوا مع بعض أونلاين ♥️</div>
       </div>
       <button class="btn pri" id="xoCreate" type="button" style="margin-top:0">✨ لعبة جديدة</button>
       <button class="btn" id="xoJoinBtn" type="button">🔑 عندي كود لعبة</button>
@@ -471,6 +476,38 @@ var ARD="٠١٢٣٤٥٦٧٨٩";
 var client=null,clientOk=false,brokerTry=0,connTimer=null;
 var code=null,myMark=null,state=null,subbed=false;
 var NM={X:"كوكو",O:"كتكوتي"};
+var LOBBY="nor3in-loma-xo/v1/lobby",host=false,dismissed={};
+var who=null,pendingCode=null;
+try{who=localStorage.getItem("xoWho");if(who!=="X"&&who!=="O")who=null}catch(e){}
+function showWho(){var w=byId("xoWho"),m=byId("xoMenu");if(!w||!m)return;w.style.display=who?"none":"";m.style.display=who?"":"none"}
+function notifyPeer(){
+  if(!who||!code||!client||!clientOk)return;
+  try{client.publish(LOBBY,JSON.stringify({from:who,code:code,id:CID,t:Date.now()}),{qos:0})}catch(e){}
+}
+function hideInvite(){var b=byId("xoInvite");if(b&&b.parentNode)b.parentNode.removeChild(b)}
+function showInvite(from,c){
+  hideInvite();
+  var b=document.createElement("div");b.id="xoInvite";
+  b.setAttribute("style","position:fixed;top:12px;left:12px;right:12px;z-index:2147483647;padding:14px;border-radius:18px;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.45);font-weight:800;font-size:16px;font-family:inherit");
+  var tx=document.createElement("div");
+  tx.textContent="🎮 "+NM[from]+(from==="O"?" بتستناك":" بيستناك")+" في لعبة إكس أو!";
+  var r=document.createElement("div");r.setAttribute("style","display:flex;gap:10px;margin-top:10px");
+  var j=document.createElement("button");j.type="button";j.id="xoInvJoin";j.textContent="ادخل دلوقتي 💜";
+  var x=document.createElement("button");x.type="button";x.id="xoInvX";x.textContent="لاحقا";
+  var st="flex:1;padding:10px;border:0;border-radius:12px;font-weight:800;font-family:inherit;font-size:15px;";
+  j.setAttribute("style",st+"background:#fff;color:#6a2cc9");x.setAttribute("style",st+"background:rgba(255,255,255,.25);color:#fff");
+  j.setAttribute("data-c",c);x.setAttribute("data-c",c);
+  r.appendChild(j);r.appendChild(x);b.appendChild(tx);b.appendChild(r);
+  var ov=byId("xoOv");(ov&&ov.open?ov:document.body).appendChild(b);
+}
+function onLobby(payload){
+  var d;try{d=JSON.parse(payload.toString())}catch(e){return}
+  if(!who||!d||!d.code||d.from===who||d.id===CID)return;
+  if(Date.now()-(d.t||0)>60000)return;
+  if(code===d.code||dismissed[d.code])return;
+  showInvite(d.from,String(d.code));
+}
+function lobbyOn(){ if(who)ensureClient(function(){}) }
 function other(m){return m==="X"?"O":"X"}
 var lastPeer=0,pingT=null;
 function byId(i){return document.getElementById(i)}
@@ -509,6 +546,10 @@ function ensureClient(onReady){
     if(fired)return;fired=true;clearTimeout(connTimer);
     clientOk=true;msg("");onReady();
   });
+  c.on("connect",function(){
+    if(who)c.subscribe(LOBBY,{qos:0});
+    if(fired&&code&&subbed)c.subscribe([topic("state"),topic("ping")],{qos:0});
+  });
   c.on("message",onMessage);
   c.on("error",function(){});
   c.on("close",function(){clientOk=false});
@@ -521,12 +562,14 @@ function subscribeRoom(){
   });
 }
 function sendPing(){
+  if(host&&Date.now()-lastPeer>12000)notifyPeer();
   if(client&&clientOk&&code){client.publish(topic("ping"),JSON.stringify({id:CID,st:state}),{qos:0})}
 }
 function publishState(){
   if(client&&clientOk&&state){client.publish(topic("state"),JSON.stringify(state),{qos:0,retain:true})}
 }
 function onMessage(t,payload){
+  if(t===LOBBY){onLobby(payload);return}
   var d;try{d=JSON.parse(payload.toString())}catch(e){return}
   if(!code||t.indexOf("nor3in-loma-xo/v1/"+code+"/")!==0)return;
   if(t===topic("ping")){if(d.id&&d.id!==CID){lastPeer=Date.now();if(!state&&d.st&&d.st.board){state=d.st}renderPeer()}return}
@@ -605,16 +648,19 @@ function enterGame(){
 }
 
 function startCreate(){
+  if(!who){showWho();return}
   code=String(Math.floor(1000+Math.random()*9000));
-  myMark="X";state=null;lastPeer=0;
+  myMark=who;host=true;state=null;lastPeer=0;
   msg("بنعمل اللعبة...");
   ensureClient(function(){
     subscribeRoom();
-    state=newState(1);publishState();store();enterGame();
+    state=newState(1);publishState();store();enterGame();notifyPeer();
   });
 }
 
 function startJoin(c,markIfKnown){
+  host=false;
+  if(!who){pendingCode=c;showWho();return}
   code=c;lastPeer=0;state=null;
   msg("بندخل اللعبة...");
   ensureClient(function(){
@@ -625,8 +671,7 @@ function startJoin(c,markIfKnown){
       if(state){
         clearInterval(iv);
         var known=recall();
-        myMark=(known&&known.code===code&&known.mark)?known.mark:(markIfKnown||"O");
-        if(!myMark)myMark="O";
+        myMark=(known&&known.code===code&&known.mark)?known.mark:(markIfKnown||who);
         store();enterGame();msg("");
       }else if(waited>=9000){
         clearInterval(iv);msg("ملقيناش لعبة بالكود ده، اتأكد من الكود وجرب تاني");
@@ -637,10 +682,10 @@ function startJoin(c,markIfKnown){
 
 function leaveRoom(){
   if(pingT){clearInterval(pingT);pingT=null}
-  code=null;state=null;myMark=null;lastPeer=0;
+  code=null;state=null;myMark=null;lastPeer=0;host=false;
   var bd=byId("xoBoard");if(bd)bd.innerHTML="";
   byId("xoGame").style.display="none";
-  byId("xoMenu").style.display="";
+  showWho();
   refreshResume();msg("");
 }
 
@@ -653,7 +698,7 @@ function refreshResume(){
 
 function openOv(){
   var ov=byId("xoOv");if(!ov)return;
-  refreshResume();msg("");
+  refreshResume();msg("");if(!code)showWho();
   if(!ov.open){try{ov.showModal()}catch(e){ov.setAttribute("open","")}}
 }
 function closeOv(){
@@ -667,6 +712,18 @@ document.addEventListener("click",function(e){
   if(!t)return;
   switch(t.id){
     case "xoBtn":openOv();break;
+    case "xoWhoX":case "xoWhoO":
+      who=t.id==="xoWhoX"?"X":"O";
+      try{localStorage.setItem("xoWho",who)}catch(err){}
+      showWho();
+      lobbyOn();
+      if(pendingCode){var pc=pendingCode;pendingCode=null;startJoin(pc,null)}
+      break;
+    case "xoInvJoin":
+      var ic=t.getAttribute("data-c");hideInvite();
+      if(ic){var ov2=byId("xoOv");if(code){leaveRoom()}openOv();startJoin(ic,null)}
+      break;
+    case "xoInvX":dismissed[t.getAttribute("data-c")]=1;hideInvite();break;
     case "xoX":closeOv();break;
     case "xoCreate":startCreate();break;
     case "xoJoinBtn":
@@ -695,6 +752,7 @@ document.addEventListener("click",function(e){
   }
 });
 setInterval(function(){if(code)renderPeer()},5000);
+setTimeout(lobbyOn,1500);
 })();
 </script>
 </body></html>
