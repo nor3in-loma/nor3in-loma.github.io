@@ -1502,7 +1502,7 @@ function gate(){
   }
   go.addEventListener("click",submit);
   [p1,p2].forEach(function(i){i.addEventListener("keydown",function(e){if(e.key==="Enter")submit()})});
-  c.appendChild(h);c.appendChild(row);c.appendChild(p1);c.appendChild(p2);c.appendChild(go);c.appendChild(er);c.appendChild(tg);
+  c.appendChild(h);c.appendChild(row);c.appendChild(p1);c.appendChild(p2);c.appendChild(go);c.appendChild(er);
   g.appendChild(c);document.documentElement.appendChild(g);
 }
 /* ---------- presence ---------- */
@@ -1519,7 +1519,7 @@ function pill(){
       var done=function(){clearSess();location.reload()};
       send(false,true).then(done,done);
     });
-    b.appendChild(dot);b.appendChild(tx);b.appendChild(lo);document.body.appendChild(b);
+    b.appendChild(dot);b.appendChild(tx);document.body.appendChild(b);
   }
   return b;
 }
