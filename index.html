@@ -515,11 +515,11 @@ function ensureClient(onReady){
 function subscribeRoom(){
   subbed=false;
   client.subscribe([topic("state"),topic("ping")],{qos:0},function(err){
-    if(!err){subbed=true;if(pingT)clearInterval(pingT);pingT=setInterval(sendPing,4000);sendPing()}
+    if(!err){subbed=true;if(pingT)clearInterval(pingT);pingT=setInterval(sendPing,2500);sendPing()}
   });
 }
 function sendPing(){
-  if(client&&clientOk&&code){client.publish(topic("ping"),JSON.stringify({id:CID}),{qos:0})}
+  if(client&&clientOk&&code){client.publish(topic("ping"),JSON.stringify({id:CID,st:state}),{qos:0})}
 }
 function publishState(){
   if(client&&clientOk&&state){client.publish(topic("state"),JSON.stringify(state),{qos:0,retain:true})}
@@ -527,7 +527,7 @@ function publishState(){
 function onMessage(t,payload){
   var d;try{d=JSON.parse(payload.toString())}catch(e){return}
   if(!code||t.indexOf("nor3in-loma-xo/v1/"+code+"/")!==0)return;
-  if(t===topic("ping")){if(d.id&&d.id!==CID){lastPeer=Date.now();renderPeer()}return}
+  if(t===topic("ping")){if(d.id&&d.id!==CID){lastPeer=Date.now();if(!state&&d.st&&d.st.board){state=d.st}renderPeer()}return}
   if(t===topic("state")){
     state=d;render();
   }
@@ -624,7 +624,7 @@ function startJoin(c,markIfKnown){
         myMark=(known&&known.code===code&&known.mark)?known.mark:(markIfKnown||"O");
         if(!myMark)myMark="O";
         store();enterGame();msg("");
-      }else if(waited>=6000){
+      }else if(waited>=9000){
         clearInterval(iv);msg("ملقيناش لعبة بالكود ده، اتأكد من الكود وجرب تاني");
       }
     },500);
