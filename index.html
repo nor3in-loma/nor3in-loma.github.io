@@ -769,8 +769,8 @@ function render(){
   var meTag=myMark==="X"?"❌":"⭕";
   if(state.winner){
     if(state.winner==="D")st.innerHTML="تعادل 🤝";
-    else if(state.winner===myMark)st.innerHTML="مبروووك يا "+NM[myMark]+" كسبت 🎉♥️";
-    else st.innerHTML=NM[state.winner]+" كسب"+(state.winner==="O"?"ت":"")+" الجولة دي 😅";
+    else if(state.winner===myMark)st.innerHTML="مبروووك يا "+NM[myMark]+" كسبت 🎉♥️<br>كوكو لعيب مفيش مستوى🥱😂";
+    else st.innerHTML=NM[state.winner]+" كسب"+(state.winner==="O"?"ت":"")+" الجولة دي 😅<br>أشطر شطورة يا روحي 😍";
   }else{
     var tm=state.turn==="X"?"❌":"⭕";
     st.innerHTML="دور "+NM[state.turn]+" "+tm+(state.turn===myMark?" (دورك) 💜":"")+' <span class="xo-me">انت '+NM[myMark]+" "+meTag+'</span>';
@@ -942,7 +942,7 @@ function draw(){
  $("soloScore").textContent="مستوى "+NAMES[lvl]+" | انت: "+sc.w+" | الموبايل: "+sc.l+" | تعادل: "+sc.d}
 function finish(){
  var w=win(bd);
- if(w){over=true;winLine=w.l;if(w.m==="X"){sc.w++;status("مبروووك كسبت 🎉♥️")}else{sc.l++;status("الموبايل كسب الجولة دي 😅 جرب تاني")}draw();return true}
+ if(w){over=true;winLine=w.l;if(w.m==="X"){sc.w++;status("مبروووك كسبت 🎉♥️<br>كوكو لعيب مفيش مستوى🥱😂")}else{sc.l++;status("الموبايل كسب الجولة دي 😅<br>أشطر شطورة يا روحي 😍")}draw();return true}
  if(!empt(bd).length){over=true;sc.d++;status("تعادل 🤝");draw();return true}
  return false}
 function tap(i){
@@ -1075,8 +1075,8 @@ function render(){
   var st=$("domStatus"),mt=s.turn===me;st.className="xo-status dm-st"+(s.win?(s.win===me?" dm-w":(s.win==="D"?"":" dm-l")):(mt?" dm-my":""));
   if(s.win){
     if(s.win==="D")st.textContent="تعادل 🤝";
-    else if(s.win===me)st.textContent=(s.why==="out"?"خلّصت قطعك وكسبت":"كسبت بالنقط")+" 🎉♥️";
-    else st.textContent=nmOf(s.win)+(s.why==="out"?" خلّص قطعه وكسب":" كسب بالنقط")+" 😅";
+    else if(s.win===me)st.innerHTML=(s.why==="out"?"خلّصت قطعك وكسبت":"كسبت بالنقط")+" 🎉♥️<br>كوكو لعيب مفيش مستوى🥱😂";
+    else st.innerHTML=nmOf(s.win)+(s.why==="out"?" خلّص قطعه وكسب":" كسب بالنقط")+" 😅<br>أشطر شطورة يا روحي 😍";
   }else if(mode==="solo"){
     st.textContent=mt?"دورك 💜":"الموبايل بيفكر... 🤔";
   }else st.textContent=mt?("دورك يا "+NM[me]+" 💜"):("دور "+NM[s.turn]+"...");
