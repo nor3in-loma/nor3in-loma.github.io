@@ -1890,7 +1890,6 @@ function chatMode(){
   var has=$("chatInp").value.trim().length>0;
   $("chatSend").style.display=has?"block":"none";
   $("chatMic").style.display=has||chatEditId?"none":"block";
-  $("chatAtt").style.display=chatEditId?"none":"block";
 }
 function chatSigOf(a){return a.map(function(m){return m.id+"|"+m.body.length+"|"+(m.edited_at||"")+"|"+m.pinned+"|"+m.deleted+"|"+(m.seen_at||"")}).join(",")}
 function chatBuild(){
@@ -1939,18 +1938,16 @@ function chatBuild(){
   var bar=mk("div","display:flex;gap:8px;padding:10px 12px;background:rgba(255,255,255,.07);align-items:center");
   bar.id="chatBar";
   var circ="width:46px;height:46px;border-radius:50%;border:0;color:#fff;font-size:19px;cursor:pointer;flex:none;font-family:inherit;";
-  var att=mk("button",circ+"background:rgba(255,255,255,.14);","\ud83d\udcf7");att.type="button";att.id="chatAtt";
-  var fi=mk("input","display:none");fi.type="file";fi.accept="image/*";fi.id="chatFile";
-  att.addEventListener("click",function(){fi.click()});
-  fi.addEventListener("change",function(){var f=fi.files&&fi.files[0];fi.value="";if(f)chatSendImage(f)});
   var inp=mk("input","flex:1;min-width:0;border-radius:999px;border:0;padding:13px 18px;font-size:16px;background:rgba(255,255,255,.13);color:#fff;outline:none;font-family:inherit;caret-color:#ff7ab8");
   inp.id="chatInp";inp.type="text";inp.maxLength=2000;inp.autocomplete="off";inp.placeholder="\u0627\u0643\u062a\u0628 \u0631\u0633\u0627\u0644\u0629...";
   var snd=mk("button",circ+"background:linear-gradient(135deg,#ff6fa5,#9a5bff);transform:scaleX(-1);display:none","\u27a4");snd.type="button";snd.id="chatSend";
   var mic=mk("button",circ+"background:linear-gradient(135deg,#ff6fa5,#9a5bff);","\ud83c\udf99\ufe0f");mic.type="button";mic.id="chatMic";
+  var hrt=mk("button",circ+"background:rgba(255,255,255,.14);","\u2665\ufe0f");hrt.type="button";hrt.id="chatHeart";hrt.title="\u0628\u062d\u0628\u0643";
+  hrt.addEventListener("click",chatSendHeart);
   snd.addEventListener("click",chatSend);mic.addEventListener("click",recStart);
   inp.addEventListener("keydown",function(e){if(e.key==="Enter")chatSend()});
   inp.addEventListener("input",chatMode);
-  bar.appendChild(att);bar.appendChild(fi);bar.appendChild(inp);bar.appendChild(snd);bar.appendChild(mic);
+  bar.appendChild(inp);bar.appendChild(snd);bar.appendChild(mic);bar.appendChild(hrt);
 
   var rb=mk("div","display:none;gap:10px;padding:10px 12px;background:rgba(255,255,255,.07);align-items:center");
   rb.id="chatRec";
@@ -2048,6 +2045,10 @@ function chatInsert(row){
     return false;
   });
 }
+function chatSendHeart(){
+  if(!sess)return;
+  chatInsert({sender:sess.who,body:"\u2665\ufe0f",kind:"text"}).then(function(){}).catch(function(){});
+}
 function chatSend(){
   var inp=$("chatInp");if(!inp)return;
   var v=inp.value.trim();
@@ -2073,23 +2074,6 @@ function sendMedia(blob,mime,ext,kind,dur){
       blobCache[path]=Promise.resolve(URL.createObjectURL(blob));
     });
   }).then(function(){busy("")},function(){busy("\u26a0\ufe0f \u0645\u0627\u0627\u062a\u0628\u0639\u062a\u0634\u060c \u062c\u0631\u0628 \u062a\u0627\u0646\u064a");setTimeout(function(){busy("")},3500)});
-}
-function chatSendImage(f){
-  if(!/^image\//.test(f.type))return;
-  var img=new Image(),u=URL.createObjectURL(f);
-  img.onload=function(){
-    var mx=1600,w=img.naturalWidth,h=img.naturalHeight,s=Math.min(1,mx/Math.max(w,h));
-    var c=document.createElement("canvas");c.width=Math.round(w*s);c.height=Math.round(h*s);
-    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-    URL.revokeObjectURL(u);
-    c.toBlob(function(b){if(b)sendMedia(b,"image/jpeg","jpg","image")},"image/jpeg",0.85);
-  };
-  img.onerror=function(){
-    URL.revokeObjectURL(u);
-    if(f.size<=MAXMB*1048576)sendMedia(f,f.type,(f.type.split("/")[1]||"img").replace(/[^a-z0-9]/gi,""),"image");
-    else{busy("\u0627\u0644\u0635\u0648\u0631\u0629 \u0643\u0628\u064a\u0631\u0629");setTimeout(function(){busy("")},3000)}
-  };
-  img.src=u;
 }
 var rec=null,recChunks=[],recT0=0,recTick=null,recSend=false,recStream=null;
 function recUi(on){
