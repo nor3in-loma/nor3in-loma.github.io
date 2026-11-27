@@ -1843,4 +1843,65 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',kick); else kick();
 })();
 </script>
+<style>@keyframes prShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}</style>
+<script>
+(function(){
+  var TZ='Africa/Cairo',KEYS={X:'prCal_v4_assiut',O:'prCal_v4_menoufia'};
+  var NAMES={Fajr:'الفجر',Dhuhr:'الظهر',Asr:'العصر',Maghrib:'المغرب',Isha:'العشاء'};
+  var ph2=null;
+  var el=null,hideT=null;
+  function who(){try{var s=JSON.parse(localStorage.getItem('nlSess')||'null');return s&&s.who?(s.who==='O'?'O':'X'):null}catch(e){return null}}
+  function pad(n){return (n<10?'0':'')+n}
+  function now(){
+    var f=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    var p={};f.formatToParts(new Date()).forEach(function(x){if(x.type!=='literal')p[x.type]=x.value});
+    return p;
+  }
+  function show(w,pn){
+    if(!el){
+      el=document.createElement('div');el.id='prAlert';el.setAttribute('role','alert');
+      el.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);left:0;right:0;margin:0 auto;width:min(88%,360px);z-index:100000;box-sizing:border-box;padding:14px 16px;border-radius:18px;text-align:center;direction:rtl;font-family:inherit;font-weight:800;font-size:1.15rem;line-height:1.6;color:#fff;background:linear-gradient(155deg,#22d191,#13ad74 45%,#0a8a5b);border:1px solid rgba(255,255,255,.3);box-shadow:0 14px 30px -10px rgba(0,0,0,.55);transition:transform .35s ease-out,opacity .35s;transform:translateY(-30px);opacity:0;cursor:pointer;display:none';
+      el.addEventListener('click',hide);
+      document.body.appendChild(el);
+    }
+    clearTimeout(ph2);
+    el.style.animation='none';
+    var fin=(w==='O'?'قومي':'قوم')+' صلي يا روحي ♥️';
+    if(pn){
+      el.textContent='حان الآن موعد أذان '+pn;
+      void el.offsetWidth;
+      el.style.animation='prShake .5s ease-in-out 6';
+      try{navigator.vibrate&&navigator.vibrate([200,100,200,100,200,100,200])}catch(e){}
+      ph2=setTimeout(function(){el.style.animation='none';el.textContent=fin},4000);
+    }else el.textContent=fin;
+    el.style.display='block';
+    void el.offsetWidth;
+    el.style.transform='none';el.style.opacity='1';
+    clearTimeout(hideT);hideT=setTimeout(hide,pn?19000:15000);
+  }
+  function hide(){
+    if(!el)return;clearTimeout(hideT);clearTimeout(ph2);
+    el.style.transform='translateY(-30px)';el.style.opacity='0';
+    setTimeout(function(){if(el)el.style.display='none'},380);
+  }
+  window.__prayerAlertShow=show;
+  function check(){
+    var w=who();if(!w)return;
+    var n=now(),k=n.year+'-'+n.month+'-'+n.day,hm=n.hour+':'+n.minute;
+    var c;try{c=JSON.parse(localStorage.getItem(KEYS[w])||'null')}catch(e){return}
+    var d=c&&c.days&&c.days[n.day+'-'+n.month+'-'+n.year];
+    if(!d||!d.t)return;
+    for(var p in NAMES){
+      var t=d.t[p];if(!t)continue;
+      var a=String(t).split(':');if(a[0]+':'+a[1]!==hm&&pad(+a[0])+':'+a[1]!==hm)continue;
+      var id=k+'|'+p,last=null;
+      try{last=localStorage.getItem('prAlertLast')}catch(e){}
+      if(last===id)return;
+      try{localStorage.setItem('prAlertLast',id)}catch(e){}
+      show(w,NAMES[p]);return;
+    }
+  }
+  setInterval(check,5000);
+})();
+</script>
 </body></html>
