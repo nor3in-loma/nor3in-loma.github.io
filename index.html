@@ -2570,4 +2570,136 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 <script>
 (function(){var iv=setInterval(function(){var p=document.getElementById("player");if(p&&p.classList.contains("on")){document.body.classList.add("nlRev");clearInterval(iv)}},300)})();
 </script>
+<style id="ktCss">#ktSec{max-width:560px;margin:34px auto 0;padding:0 12px;position:relative;z-index:5}
+#ktSec h2{text-align:center;font-size:1.45rem;color:var(--pink2);margin-bottom:14px}
+#ktSec .kt-today{border-radius:26px;padding:16px 18px 10px;background:#fff1cf;color:#4a3410;box-shadow:0 12px 30px #0000004d;text-align:right}
+#ktSec .kt-head{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;color:#2d2410}
+#ktSec .kt-head i{font-style:normal;display:flex;align-items:center}
+#ktSec .kt-msg{margin:10px 0 4px;font-size:1.1rem;line-height:1.9;min-height:3.6em;color:#3a2c10;text-align:center}
+#ktSec .kt-ref{color:#8a6d2e;font-size:.85rem;text-align:center}
+#ktSec .kt-acts{display:flex;gap:8px;justify-content:space-between;margin-top:6px}
+#ktSec .kt-acts button{flex:1;border:0;background:transparent;color:#2d2410;border-radius:12px;padding:8px 4px;font-weight:800;font-size:.85rem;white-space:nowrap;cursor:pointer}
+#ktSec .kt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:14px}
+#ktSec .kt-tile{border:0;background:#f4f4f4;border-radius:20px;padding:12px 6px 12px;color:#2d2410;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;min-height:160px;box-shadow:0 8px 20px #00000055;min-width:0}
+#ktSec .kt-tile:active{transform:scale(.96)}
+#ktSec .kt-ic{width:100%;display:flex;align-items:center;justify-content:center;flex:1}
+#ktSec .kt-ic svg{width:84px;height:84px;display:block;max-width:100%}
+#ktSec .kt-lb{font-weight:800;font-size:.78rem;padding:7px 6px;border-radius:999px;background:#f6c518;color:#2d2410;white-space:normal;line-height:1.35;width:100%;box-sizing:border-box;text-align:center;min-height:2.3em;display:flex;align-items:center;justify-content:center}
+#ktOv .kt-card{border-radius:22px;padding:20px 16px;background:linear-gradient(165deg,#ffffff16,#ffffff08);border:1px solid rgba(255,111,165,.3);text-align:center;line-height:2}
+#ktOv .kt-card .big{font-size:1.15rem;margin:8px 0}
+#ktOv .kt-q{font-family:"Amiri Quran",serif;font-size:1.5rem;line-height:2.4}
+#ktOv .kt-ref{color:var(--soft);font-size:.85rem}
+#ktOv .kt-row{display:flex;gap:10px;margin-top:10px}
+#ktOv .kt-row .btn{margin-top:0}
+#ktWheel{width:210px;height:210px;border-radius:50%;margin:10px auto;position:relative;border:6px solid #fff3;background:conic-gradient(#ff6fa5 0 45deg,#9a5bff 45deg 90deg,#ffb86b 90deg 135deg,#4ed6a5 135deg 180deg,#ff6fa5 180deg 225deg,#9a5bff 225deg 270deg,#ffb86b 270deg 315deg,#4ed6a5 315deg 360deg);transition:transform 3.2s cubic-bezier(.15,.7,.1,1)}
+#ktPtr{width:0;height:0;margin:0 auto -8px;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid #fff;position:relative;z-index:2}
+#ktDhk{font-size:1.4rem;font-family:"Amiri Quran",serif;line-height:2.2;min-height:4.4em}
+#ktCnt{font-size:2.6rem;font-weight:800;margin:6px 0}
+#ktToast{position:fixed;top:14px;left:50%;transform:translate(-50%,-90px);background:#2a1346ee;color:#fff;padding:10px 18px;border-radius:14px;z-index:2147483000;transition:transform .35s;font-weight:700;border:1px solid #ff6fa5aa}
+#ktToast.on{transform:translate(-50%,0)}
+
+#ktSec,#ktSec button,#ktSec .kt-tile,#ktSec .kt-acts button,#ktOv,#ktOv button,#ktToast{font-family:Cairo,SiteEmoji,system-ui,sans-serif}
+</style>
+<script id="ktJs">
+(function(){
+"use strict";
+var D={"V": [{"t": "ٱلَّذِينَ ءَامَنُواْ وَتَطۡمَئِنُّ قُلُوبُهُم بِذِكۡرِ ٱللَّهِۗ أَلَا بِذِكۡرِ ٱللَّهِ تَطۡمَئِنُّ ٱلۡقُلُوبُ", "r": "سورة الرعد، آية 28"}, {"t": "فَإِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرًا", "r": "سورة الشرح، آية 5"}, {"t": "إِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرٗا", "r": "سورة الشرح، آية 6"}, {"t": "مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ", "r": "سورة الضحى، آية 3"}, {"t": "وَلَسَوۡفَ يُعۡطِيكَ رَبُّكَ فَتَرۡضَىٰٓ", "r": "سورة الضحى، آية 5"}, {"t": "فَٱذۡكُرُونِيٓ أَذۡكُرۡكُمۡ وَٱشۡكُرُواْ لِي وَلَا تَكۡفُرُونِ", "r": "سورة البقرة، آية 152"}, {"t": "وَيَرۡزُقۡهُ مِنۡ حَيۡثُ لَا يَحۡتَسِبُۚ وَمَن يَتَوَكَّلۡ عَلَى ٱللَّهِ فَهُوَ حَسۡبُهُۥٓۚ إِنَّ ٱللَّهَ بَٰلِغُ أَمۡرِهِۦۚ قَدۡ جَعَلَ ٱللَّهُ لِكُلِّ شَيۡءٖ قَدۡرٗا", "r": "سورة الطلاق، آية 3"}, {"t": "وَلَا تَهِنُواْ وَلَا تَحۡزَنُواْ وَأَنتُمُ ٱلۡأَعۡلَوۡنَ إِن كُنتُم مُّؤۡمِنِينَ", "r": "سورة آل عمران، آية 139"}, {"t": "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌۖ أُجِيبُ دَعۡوَةَ ٱلدَّاعِ إِذَا دَعَانِۖ فَلۡيَسۡتَجِيبُواْ لِي وَلۡيُؤۡمِنُواْ بِي لَعَلَّهُمۡ يَرۡشُدُونَ", "r": "سورة البقرة، آية 186"}, {"t": "قَالَ لَا تَخَافَآۖ إِنَّنِي مَعَكُمَآ أَسۡمَعُ وَأَرَىٰ", "r": "سورة طه، آية 46"}, {"t": "لَا يُكَلِّفُ ٱللَّهُ نَفۡسًا إِلَّا وُسۡعَهَاۚ لَهَا مَا كَسَبَتۡ وَعَلَيۡهَا مَا ٱكۡتَسَبَتۡۗ رَبَّنَا لَا تُؤَاخِذۡنَآ إِن نَّسِينَآ أَوۡ أَخۡطَأۡنَاۚ رَبَّنَا وَلَا تَحۡمِلۡ عَلَيۡنَآ إِصۡرٗا كَمَا حَمَلۡتَهُۥ عَلَى ٱلَّذِينَ مِن قَبۡلِنَاۚ رَبَّنَا وَلَا تُحَمِّلۡنَا مَا لَا طَاقَةَ لَنَا بِهِۦۖ وَٱعۡفُ عَنَّا وَٱغۡفِرۡ لَنَا وَٱرۡحَمۡنَآۚ أَنتَ مَوۡلَىٰنَا فَٱنصُرۡنَا عَلَى ٱلۡقَوۡمِ ٱلۡكَٰفِرِينَ", "r": "سورة البقرة، آية 286"}, {"t": "يَٰبَنِيَّ ٱذۡهَبُواْ فَتَحَسَّسُواْ مِن يُوسُفَ وَأَخِيهِ وَلَا تَاْيۡـَٔسُواْ مِن رَّوۡحِ ٱللَّهِۖ إِنَّهُۥ لَا يَاْيۡـَٔسُ مِن رَّوۡحِ ٱللَّهِ إِلَّا ٱلۡقَوۡمُ ٱلۡكَٰفِرُونَ", "r": "سورة يوسف، آية 87"}], "M": [["لعل الله يُفاجئك بما تتمنّي قريبًا 🤍", "لعل الله يُفاجئك بما تتمنّى قريبًا 🤍"], ["إنتِ أحلى حاجة حصلتلي، وبكرة أحلى كمان ♥️", "إنت أحلى حاجة حصلتلي، وبكرة أحلى كمان ♥️"], ["لو يومك كان تقيل النهارده، افتكري إن في حد بيحبك جدًا وفخور بيكي 🤍", "لو يومك كان تقيل النهارده، افتكر إن في حد بيحبك جدًا وفخور بيك 🤍"], ["خدي نفس عميق، كل حاجة هتعدي بإذن الله 🌿", "خد نفس عميق، كل حاجة هتعدي بإذن الله 🌿"], ["ضحكتك دي أحسن حاجة في يومي 😍", "ضحكتك دي أحسن حاجة في يومي 😍"], ["مهما الدنيا ضاقت، ربنا قريب ورحمته واسعة 🤲", "مهما الدنيا ضاقت، ربنا قريب ورحمته واسعة 🤲"], ["اشربي مياه وارتاحي شوية، جسمك يستاهل 🌊", "اشرب مياه وارتاح شوية، جسمك يستاهل 🌊"], ["مش لازم تبقي كويسة طول الوقت، كفاية إنك بتحاولي وأنا شايفك 💜", "مش لازم تبقى كويس طول الوقت، كفاية إنك بتحاول وأنا شايفك 💜"], ["اللي ليكي هييجي لحد عندك، ثقي في ربنا ✨", "اللي ليك هييجي لحد عندك، ثق في ربنا ✨"], ["النهارده اعملي حاجة صغيرة تفرحك، وإنتِ تستاهلي الدنيا كلها 🌸", "النهارده اعمل حاجة صغيرة تفرحك، وإنت تستاهل الدنيا كلها 🌸"], ["كل خطوة صغيرة بتقرّبك لحلمك، كملي 💪", "كل خطوة صغيرة بتقرّبك لحلمك، كمّل 💪"], ["وحشتيني حتى وإنتِ قدامي 🥺♥️", "وحشتني حتى وإنت قدامي 🥺♥️"], ["قولي الحمد لله على اللي عدّى، وبسم الله على اللي جاي 🤍", "قول الحمد لله على اللي عدّى، وبسم الله على اللي جاي 🤍"], ["أنا معاكي في الحلو والصعب، ومش رايح في حتة 🤍", "أنا معاك في الحلو والصعب، ومش رايحة في حتة 🤍"], ["نامي بدري النهارده، وأحلام سعيدة يا قلبي 🌙", "نام بدري النهارده، وأحلام سعيدة يا قلبي 🌙"]], "H": [["قلبي مرتاح وإنتِ جنبي، ومش عايز غير كده ♥️", "قلبي مرتاح وإنت جنبي، ومش عايزة غير كده ♥️"], ["كل ما أفكر في بكرة، وشّك هو أول حاجة بتيجي في بالي 💜", "كل ما أفكر في بكرة، وشّك هو أول حاجة بتيجي في بالي 💜"], ["ربنا يديمك في حياتي ويحفظك ليا 🤲", "ربنا يديمك في حياتي ويحفظك ليا 🤲"], ["شكرًا إنك بتسمعيني وبتفهميني من غير ما أتكلم 🥹", "شكرًا إنك بتسمعني وبتفهمني من غير ما أتكلم 🥹"], ["إنتِ مش بس حبيبتي، إنتِ صاحبتي وسندي 🫂", "إنت مش بس حبيبي، إنت صاحبي وسندي 🫂"], ["لو الدنيا زعلتك، ارجعيلي، حضني مفتوح دايمًا 🤍", "لو الدنيا زعلتك، ارجعلي، حضني مفتوح دايمًا 🤍"], ["أحلى حاجة في اليوم إني أسمع صوتك 🎧", "أحلى حاجة في اليوم إني أسمع صوتك 🎧"], ["بحبك أكتر من إمبارح وأقل من بكرة 😍", "بحبك أكتر من إمبارح وأقل من بكرة 😍"]], "C": [["ابعتي له رسالة صوتية قصيرة تقولي فيها حاجة بتحبيها فيه 🎧️", "ابعتلها رسالة صوتية قصيرة تقول فيها حاجة بتحبها فيها 🎧️"], ["اكتبي 3 حاجات اتحلّوا النهارده بسببه 📌", "اكتب 3 حاجات اتحلّوا النهارده بسببها 📌"], ["اشربي كوباية مياه دلوقتي وصوّريها 🌊", "اشرب كوباية مياه دلوقتي وصوّرها 🌊"], ["اتصلي بحد من أهلك واطمني عليه 📱", "اتصل بحد من أهلك واطمّن عليه 📱"], ["اعملي حاجة حلوة لنفسك النهارده، ولو نص ساعة بس 🌸", "اعمل حاجة حلوة لنفسك النهارده، ولو نص ساعة بس 🌸"], ["اكتبي له أحلى ذكرى بينكم في سطرين ✍️", "اكتبلها أحلى ذكرى بينكم في سطرين ✍️"], ["قولي لحد النهارده شكرًا على حاجة عملها 🤝", "قول لحد النهارده شكرًا على حاجة عملها 🤝"]], "W": [["حضن طويل 🫂", "حضن طويل 🫂"], ["أغنية تختاريها وتبعتيها له 🎶", "أغنية تختارها وتبعتهالها 🎶"], ["أمنية تتمنّيها النهارده ✨", "أمنية تتمنّاها النهارده ✨"], ["سيلفي بضحكة كبيرة 📸", "سيلفي بضحكة كبيرة 📸"], ["مكالمة 5 دقايق من غير موبايل في إيدك تاني 📱️", "مكالمة 5 دقايق من غير موبايل في إيدك تاني 📱️"], ["كلمة حلوة واحدة تقوليها له دلوقتي 💬", "كلمة حلوة واحدة تقولها لها دلوقتي 💬"], ["دعوة من قلبك له 🤲", "دعوة من قلبك لها 🤲"], ["نكتة تضحّكه 😂", "نكتة تضحّكها 😂"]], "F": ["الأخطبوط عنده 3 قلوب 🌊", "الموزة في علم النبات تُعتبر ثمرة من نوع التوت (Berry) 🌿", "يوم الزهرة أطول من سنتها، لأنها بتلف حوالين نفسها أبطأ من لفّتها حوالين الشمس 🌙", "قلب الإنسان بيدق حوالي 100 ألف مرة في اليوم ❤️", "العسل مبيبوظش لو اتخزن صح في مكان نضيف ومقفول 🌸", "الابتسامة بتحرّك عضلات في الوشّ وممكن تحسّن مزاجك فعلًا 😊", "النحلة بتزور آلاف الزهور عشان تعمل معلقة عسل صغيرة 🌸"], "D": ["سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", "سُبْحَانَ اللَّهِ الْعَظِيمِ", "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ", "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ", "لَا إِلَٰهَ إِلَّا اللَّهُ"], "G": [["تصبحي على جنة يا قلبي، وأحلام سعيدة 🌙", "تصبح على جنة يا قلبي، وأحلام سعيدة 🌙"], ["نامي مطمّنة، ربنا معاكي وأنا جنبك بقلبي 🤍", "نام مطمّن، ربنا معاك وأنا جنبك بقلبي 🤍"], ["خلّصي يومك بدعوة حلوة، وسيبي التعب للصبح 🤲", "خلّص يومك بدعوة حلوة، وسيب التعب للصبح 🤲"], ["شكرًا على يوم تاني معاكي، وبكرة أحلى إن شاء الله ✨", "شكرًا على يوم تاني معاك، وبكرة أحلى إن شاء الله ✨"]], "T": [["شكرًا إنك بتصبّريني وبتسمعيني في أي وقت 🤍", "شكرًا إنك بتصبّرني وبتسمعني في أي وقت 🤍"], ["شكرًا على كل مرة فضلتي فيها جنبي 🌸", "شكرًا على كل مرة فضلتي فيها جنبي 🌸"], ["الحمد لله إن ربنا جمعني بيكي ✨", "الحمد لله إن ربنا جمعني بيكي ✨"], ["شكرًا على الضحكة اللي بتدخّليها في يومي 😍", "شكرًا على الضحكة اللي بتدخّلها في يومي 😍"], ["ممتن لوجودك أكتر مما أعرف أقول 💜", "ممتنة لوجودك أكتر مما أعرف أقول 💜"]]};
+var ARD="٠١٢٣٤٥٦٧٨٩";
+function ar(n){return String(n).replace(/\d/g,function(d){return ARD[+d]})}
+function who(){try{var s=JSON.parse(localStorage.getItem("nlSess")||"null");return s&&s.who||"O"}catch(e){return"O"}}
+function g(p){return who()==="X"?p[1]:p[0]}
+function dayIdx(){var d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()))/864e5)}
+function ap(){return document.getElementById("appRoot")||document.body}
+function $(i){return document.getElementById(i)}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+var tt;function toast(m){var t=$("ktToast");if(!t){t=el("div");t.id="ktToast";ap().appendChild(t)}t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},2200)}
+function copy(txt){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast("اتنسخت ✅")},function(){fb()});return}}catch(e){}fb();function fb(){var a=document.createElement("textarea");a.value=txt;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");toast("اتنسخت ✅")}catch(e){toast("مقدرتش أنسخ")}a.remove()}}
+function share(txt){if(navigator.share){navigator.share({text:txt}).catch(function(){})}else copy(txt)}
+var cur="";
+function setMsg(t){cur=t;$("ktMsg").textContent=t}
+function todayMsg(){return g(D.M[dayIdx()%D.M.length])}
+function randFrom(a,not){var x;do{x=a[Math.floor(Math.random()*a.length)]}while(a.length>1&&x===not);return x}
+var ov;
+function open(title,fill){
+  if(!ov){ov=document.createElement("dialog");ov.className="dn-ov";ov.id="ktOv";
+    var top=el("div","dn-top");var x=el("button","btn dn-x","✕ إغلاق");x.type="button";x.addEventListener("click",function(){ov.close()});
+    var h=el("h2","");h.id="ktT";top.appendChild(x);top.appendChild(h);
+    var b=el("div","dn-body");b.id="ktB";ov.appendChild(top);ov.appendChild(b);(ap()).appendChild(ov)}
+  $("ktT").textContent=title;var b=$("ktB");b.textContent="";fill(b);
+  try{ov.showModal()}catch(e){ov.setAttribute("open","")}
+}
+function card(b){var c=el("div","kt-card");b.appendChild(c);return c}
+function btn(t,cls,fn){var x=el("button","btn "+(cls||""),t);x.type="button";x.addEventListener("click",fn);return x}
+function row(b,arr){var r=el("div","kt-row");arr.forEach(function(a){r.appendChild(a)});b.appendChild(r)}
+function msgTile(title,list,key){
+  open(title,function(b){var c=card(b);var m=el("div","big","");c.appendChild(m);
+    function nx(){m.textContent=g(randFrom(list))}nx();
+    row(b,[btn("🔄 واحدة تانية","pri",nx),btn("📋 نسخ","",function(){copy(m.textContent)}),btn("💬 مشاركة","",function(){share(m.textContent)})]);});
+}
+function quran(){
+  open("📖 الورد القرآني",function(b){var c=card(b);var q=el("div","kt-q","");var r=el("div","kt-ref","");c.appendChild(q);c.appendChild(r);
+    var i=dayIdx()%D.V.length;
+    function show(){q.textContent=D.V[i].t;r.textContent=D.V[i].r}show();
+    row(b,[btn("◀ السابقة","",function(){i=(i+D.V.length-1)%D.V.length;show()}),btn("التالية ▶","pri",function(){i=(i+1)%D.V.length;show()})]);
+    row(b,[btn("📋 نسخ","",function(){copy(q.textContent+" ("+r.textContent+")")})]);});
+}
+function dhikr(){
+  open("📿 ورد الذكر",function(b){var c=card(b);var t=el("div","");t.id="ktDhk";var n=el("div","");n.id="ktCnt";var i=0,k=0;
+    c.appendChild(t);c.appendChild(n);
+    function show(){t.textContent=D.D[i];n.textContent=ar(k)}show();
+    var tap=btn("اضغطي للتسبيح 🤍","pri",function(){k++;n.textContent=ar(k);try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}});
+    if(who()==="X")tap.textContent="اضغط للتسبيح 🤍";
+    b.appendChild(tap);
+    row(b,[btn("ذكر تاني","",function(){i=(i+1)%D.D.length;k=0;show()}),btn("صفّر","",function(){k=0;show()})]);});
+}
+function wheel(){
+  open("🎁 عجلة السعادة",function(b){var c=card(b);var p=el("div","");p.id="ktPtr";var w=el("div","");w.id="ktWheel";var res=el("div","big","لفّي العجلة وشوفي إيه نصيبك 💜");
+    if(who()==="X")res.textContent="لفّ العجلة وشوف إيه نصيبك 💜";
+    c.appendChild(p);c.appendChild(w);c.appendChild(res);var rot=0,busy=false;
+    b.appendChild(btn("لفّ 🎁","pri",function(){if(busy)return;busy=true;res.textContent="...";rot+=1440+Math.floor(Math.random()*360);w.style.transform="rotate("+rot+"deg)";
+      setTimeout(function(){busy=false;res.textContent="🎁 "+g(randFrom(D.W))},3300)}));});
+}
+function challenge(){
+  open("💪 تحدي كل يوم",function(b){var c=card(b);var m=el("div","big",g(D.C[dayIdx()%D.C.length]));c.appendChild(m);
+    var key="ktCh"+dayIdx();var done=false;try{done=localStorage.getItem(key)==="1"}catch(e){}
+    var d=btn(done?"✅ خلّصتيه":"خلّصته ✅","pri",function(){try{localStorage.setItem(key,"1")}catch(e){}d.textContent="✅ برافو";toast("برافو عليكي 🎉")});
+    if(who()==="X"&&!done)d.textContent="خلّصته ✅";
+    b.appendChild(d);
+    b.appendChild(el("div","kt-ref","تحدي جديد كل يوم"));});
+}
+function fact(){
+  open("🧠 معلومة ع الماشي",function(b){var c=card(b);var m=el("div","big","");c.appendChild(m);function nx(){m.textContent=randFrom(D.F,m.textContent)}m.textContent=D.F[dayIdx()%D.F.length];
+    row(b,[btn("🔄 معلومة تانية","pri",nx),btn("📋 نسخ","",function(){copy(m.textContent)})]);});
+}
+function miss(){
+  open("🥺 الشوق يا سكر",function(b){var c=card(b);var m=el("div","big","دوسي لو وحشتك 💜");if(who()==="X")m.textContent="دوس لو وحشتك 💜";c.appendChild(m);var n=0;
+    var lines=["وحشتني جدًا 🥺","نفسي أشوفك دلوقتي 🤍","كل ما أفتكرك بضحك 😍","بحبك يا أحلى حاجة ♥️"];
+    b.appendChild(btn("وحشتني 💜","pri",function(){m.textContent=lines[n%lines.length];n++}));});
+}
+var SV={"wheel": "<svg viewBox=\"0 0 80 80\"><g transform=\"translate(40 42)\"><circle r=\"30\" fill=\"#ffc94a\" stroke=\"#e5a400\" stroke-width=\"3\"/><circle r=\"25\" fill=\"#ff6b6b\"/><path d=\"M0 0L0-25A25 25 0 0 1 17.7-17.7Z\" fill=\"#fff\"/><path d=\"M0 0L25 0A25 25 0 0 1 17.7 17.7Z\" fill=\"#fff\"/><path d=\"M0 0L0 25A25 25 0 0 1-17.7 17.7Z\" fill=\"#fff\"/><path d=\"M0 0L-25 0A25 25 0 0 1-17.7-17.7Z\" fill=\"#fff\"/><circle r=\"6\" fill=\"#6b3fd4\"/></g><path d=\"M40 4l6 10h-12z\" fill=\"#7b4bff\"/></svg>", "mail": "<svg viewBox=\"0 0 80 80\"><rect x=\"10\" y=\"22\" width=\"60\" height=\"42\" rx=\"6\" fill=\"#ffd36e\"/><path d=\"M10 26l30 22 30-22\" fill=\"#ffe7a3\" stroke=\"#e5a400\" stroke-width=\"2\"/><path d=\"M40 52c-10-7-14-13-9-18 3-3 7-2 9 1 2-3 6-4 9-1 5 5 1 11-9 18z\" fill=\"#ff5c8a\" transform=\"translate(0 -6)\"/></svg>", "target": "<svg viewBox=\"0 0 80 80\"><circle cx=\"38\" cy=\"44\" r=\"28\" fill=\"#fff\" stroke=\"#7b4bff\" stroke-width=\"3\"/><circle cx=\"38\" cy=\"44\" r=\"20\" fill=\"#ff7ab8\"/><circle cx=\"38\" cy=\"44\" r=\"12\" fill=\"#fff\"/><circle cx=\"38\" cy=\"44\" r=\"5\" fill=\"#7b4bff\"/><path d=\"M38 44L66 14\" stroke=\"#4a2a9c\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M60 12l8-2-2 8z\" fill=\"#ffc94a\"/></svg>", "beads": "<svg viewBox=\"0 0 80 80\"><g fill=\"#ff7ab8\" stroke=\"#c0407f\" stroke-width=\"1.5\"><circle cx=\"40\" cy=\"12\" r=\"6\"/><circle cx=\"55\" cy=\"17\" r=\"6\"/><circle cx=\"64\" cy=\"30\" r=\"6\"/><circle cx=\"64\" cy=\"46\" r=\"6\"/><circle cx=\"55\" cy=\"59\" r=\"6\"/><circle cx=\"25\" cy=\"17\" r=\"6\"/><circle cx=\"16\" cy=\"30\" r=\"6\"/><circle cx=\"16\" cy=\"46\" r=\"6\"/><circle cx=\"25\" cy=\"59\" r=\"6\"/></g><circle cx=\"40\" cy=\"64\" r=\"8\" fill=\"#ffc94a\" stroke=\"#e5a400\" stroke-width=\"2\"/><path d=\"M40 72v6\" stroke=\"#ffc94a\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg>", "bulb": "<svg viewBox=\"0 0 80 80\"><path d=\"M40 8a22 22 0 0 0-12 40c2 2 3 5 3 8h18c0-3 1-6 3-8A22 22 0 0 0 40 8z\" fill=\"#ffd54a\" stroke=\"#e5a400\" stroke-width=\"3\"/><rect x=\"31\" y=\"58\" width=\"18\" height=\"6\" rx=\"3\" fill=\"#8a7bb0\"/><rect x=\"34\" y=\"66\" width=\"12\" height=\"5\" rx=\"2.5\" fill=\"#8a7bb0\"/><path d=\"M40 20v14m-6-8l6 8 6-8\" stroke=\"#fff\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/></svg>", "star": "<svg viewBox=\"0 0 80 80\"><path d=\"M40 6l10 22 24 3-18 16 5 24-21-12-21 12 5-24L6 31l24-3z\" fill=\"#ffc94a\" stroke=\"#e5a400\" stroke-width=\"3\" stroke-linejoin=\"round\"/><circle cx=\"33\" cy=\"38\" r=\"2.5\" fill=\"#6b3fd4\"/><circle cx=\"47\" cy=\"38\" r=\"2.5\" fill=\"#6b3fd4\"/><path d=\"M34 46q6 5 12 0\" stroke=\"#6b3fd4\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/></svg>", "miss": "<svg viewBox=\"0 0 80 80\"><path d=\"M30 68C8 52 6 30 20 24c7-3 13 1 14 7 1-6 8-10 15-7 14 6 12 28-10 44z\" fill=\"#ff5c8a\" transform=\"translate(-2 -2)\"/><path d=\"M58 30c-6-4-9-9-6-13 2-2 5-1 6 1 1-2 4-3 6-1 3 4 0 9-6 13z\" fill=\"#ff9ab8\"/><circle cx=\"27\" cy=\"40\" r=\"3\" fill=\"#fff\"/><circle cx=\"41\" cy=\"40\" r=\"3\" fill=\"#fff\"/><path d=\"M28 49q6 6 12 0\" stroke=\"#fff\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/></svg>", "moon": "<svg viewBox=\"0 0 80 80\"><path d=\"M52 8a30 30 0 1 0 20 48A26 26 0 0 1 52 8z\" fill=\"#ffd54a\" stroke=\"#e5a400\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M62 16l2 5 5 2-5 2-2 5-2-5-5-2 5-2z\" fill=\"#fff\"/><path d=\"M70 40l1.5 3.5 3.5 1.5-3.5 1.5L70 50l-1.5-3.5L65 45l3.5-1.5z\" fill=\"#fff\"/></svg>", "gift": "<svg viewBox=\"0 0 80 80\"><rect x=\"12\" y=\"32\" width=\"56\" height=\"38\" rx=\"5\" fill=\"#ff7ab8\"/><rect x=\"8\" y=\"22\" width=\"64\" height=\"14\" rx=\"4\" fill=\"#ff5c8a\"/><rect x=\"35\" y=\"22\" width=\"10\" height=\"48\" fill=\"#ffd54a\"/><path d=\"M40 22c-14-14-24 0-8 0zM40 22c14-14 24 0 8 0z\" fill=\"#ffd54a\" stroke=\"#e5a400\" stroke-width=\"2\"/></svg>", "plane": "<svg viewBox=\"0 0 80 80\"><path d=\"M10 40L70 8 48 70 38 46z\" fill=\"#ffc83a\"/><path d=\"M70 8L38 46 34 62 48 70z\" fill=\"#f29b1d\"/><path d=\"M10 40L70 8 38 46z\" fill=\"#ffe08a\"/><path d=\"M20 62c-8-6-10-12-6-15 2-2 5-1 6 1 1-2 4-3 6-1 4 3 1 9-6 15z\" fill=\"#ff4f7b\" transform=\"translate(-2 4)\"/></svg>", "maze": "<svg viewBox=\"0 0 80 80\"><rect x=\"6\" y=\"14\" width=\"68\" height=\"58\" rx=\"6\" fill=\"#bfe3ff\" stroke=\"#6aa9e0\" stroke-width=\"3\"/><path d=\"M14 22H66V64H22V32H56V54H32V42H46\" fill=\"none\" stroke=\"#5a8fd0\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M66 8l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z\" fill=\"#ffc83a\" transform=\"translate(-6 -6) scale(.9)\"/></svg>", "counter": "<svg viewBox=\"0 0 80 80\"><rect x=\"22\" y=\"14\" width=\"36\" height=\"52\" rx=\"10\" fill=\"#ff9a3c\" stroke=\"#d9741a\" stroke-width=\"3\"/><rect x=\"28\" y=\"22\" width=\"24\" height=\"14\" rx=\"3\" fill=\"#fff4dc\"/><text x=\"40\" y=\"33\" font-size=\"10\" text-anchor=\"middle\" fill=\"#a85a10\" font-family=\"monospace\" font-weight=\"700\">123</text><circle cx=\"40\" cy=\"52\" r=\"8\" fill=\"#ffd27a\" stroke=\"#d9741a\" stroke-width=\"2\"/></svg>", "check": "<svg viewBox=\"0 0 80 80\"><rect x=\"14\" y=\"8\" width=\"52\" height=\"66\" rx=\"6\" fill=\"#fff\" stroke=\"#e8893a\" stroke-width=\"4\"/><g stroke=\"#8a8a9c\" stroke-width=\"3\" stroke-linecap=\"round\"><path d=\"M34 22h24M34 38h24M34 54h24\"/></g><circle cx=\"24\" cy=\"22\" r=\"5\" fill=\"#34b36b\"/><circle cx=\"24\" cy=\"38\" r=\"5\" fill=\"#34b36b\"/><circle cx=\"24\" cy=\"54\" r=\"5\" fill=\"#e8553a\"/></svg>", "scroll": "<svg viewBox=\"0 0 80 80\"><rect x=\"18\" y=\"14\" width=\"44\" height=\"52\" fill=\"#ffe8b8\" stroke=\"#c98b3a\" stroke-width=\"2\"/><rect x=\"12\" y=\"8\" width=\"56\" height=\"9\" rx=\"4.5\" fill=\"#c98b3a\"/><rect x=\"12\" y=\"63\" width=\"56\" height=\"9\" rx=\"4.5\" fill=\"#c98b3a\"/><g stroke=\"#c98b3a\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M26 28h28M26 38h28M26 48h18\"/></g><path d=\"M56 56l14-18 4 3-14 18z\" fill=\"#ff9a3c\"/></svg>", "orange": "<svg viewBox=\"0 0 80 80\"><g><circle cx=\"26\" cy=\"46\" r=\"20\" fill=\"#ff9a1f\"/><circle cx=\"26\" cy=\"46\" r=\"16\" fill=\"#ffc15a\"/><path d=\"M26 46V32M26 46l11 -8M26 46l11 9M26 46l-11 -8M26 46l-11 9M26 46v14\" stroke=\"#ff9a1f\" stroke-width=\"2\"/></g><g><circle cx=\"56\" cy=\"46\" r=\"20\" fill=\"#ff9a1f\"/><circle cx=\"56\" cy=\"46\" r=\"16\" fill=\"#ffc15a\"/><path d=\"M56 46V32M56 46l11 -8M56 46l11 9M56 46l-11 -8M56 46l-11 9M56 46v14\" stroke=\"#ff9a1f\" stroke-width=\"2\"/></g><circle cx=\"22\" cy=\"44\" r=\"2\" fill=\"#6b3a10\"/><circle cx=\"30\" cy=\"44\" r=\"2\" fill=\"#6b3a10\"/><circle cx=\"52\" cy=\"44\" r=\"2\" fill=\"#6b3a10\"/><circle cx=\"60\" cy=\"44\" r=\"2\" fill=\"#6b3a10\"/><path d=\"M23 50q3 3 6 0M53 50q3 3 6 0\" stroke=\"#6b3a10\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M40 14c-6-6-12 0-6 6zM44 10c6-6 12 0 6 6z\" fill=\"#ff4f7b\"/></svg>", "env": "<svg viewBox=\"0 0 80 80\"><path d=\"M8 34L40 10l32 24v34H8z\" fill=\"#ffd36e\"/><rect x=\"18\" y=\"20\" width=\"44\" height=\"40\" rx=\"3\" fill=\"#f3f3f3\"/><path d=\"M40 52c-10-7-14-13-9-18 3-3 7-2 9 1 2-3 6-4 9-1 5 5 1 11-9 18z\" fill=\"#ff4f7b\" transform=\"translate(0 -6)\"/><path d=\"M8 34l32 24 32-24v34H8z\" fill=\"#ffe08a\"/></svg>"};
+var TILES=[["wheel","عجلة السعادة",wheel],["plane","رسالة لقلبك",function(){msgTile("💌 رسالة لقلبك",D.H)}],["maze","تحدي كل يوم",challenge],["counter","ورد الذكر",dhikr],["check","رسالة تحفيز",function(){msgTile("✨ رسالة تحفيز",D.M)}],["scroll","معلومة ع الماشي",fact],["orange","الشوق يا سكر",miss],["env","امتنان",function(){msgTile("🎁 امتنان",D.T)}],["moon","تصبحي على جنة",function(){msgTile("🌙 تصبحي على جنة",D.G)}]];
+function build(){
+  if($("ktSec"))return true;
+  var hero=$("hero");if(!hero)return false;
+  var s=el("section","");s.id="ktSec";
+  var h=el("h2","","💜 ركن القلب");s.appendChild(h);
+  var t=el("div","kt-today");var hd=el("div","kt-head");var hi=el("i","");hi.innerHTML='<svg viewBox="0 0 40 36" width="40" height="36"><path d="M4 4h32a3 3 0 0 1 3 3v18a3 3 0 0 1-3 3H22l-8 7v-7H4a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" fill="#ff4f7b"/><path d="M20 22c-6-4-8-8-5-11 2-2 4-1 5 1 1-2 3-3 5-1 3 3 1 7-5 11z" fill="#fff"/></svg>';hd.appendChild(hi);hd.appendChild(el("span","","رسالتك النهارده"));
+  var m=el("div","kt-msg");m.id="ktMsg";
+  var a=el("div","kt-acts");
+  var b1=el("button","","📋 نسخ");b1.type="button";b1.addEventListener("click",function(){copy(cur)});
+  var b2=el("button","","💬 مشاركة");b2.type="button";b2.addEventListener("click",function(){share(cur)});
+  var b3=el("button","","🔄 رسالة تانية");b3.type="button";b3.addEventListener("click",function(){setMsg(g(randFrom(D.M)))});
+  a.appendChild(b1);a.appendChild(b2);a.appendChild(b3);
+  var dn=Math.floor((Date.now()-Date.UTC(2023,9,1))/864e5);var dl=el("div","kt-ref","النهارده اليوم رقم "+ar(dn)+" من حكايتنا 🤍");dl.style.marginBottom="8px";t.appendChild(hd);t.appendChild(m);t.appendChild(dl);t.appendChild(a);s.appendChild(t);
+  var gr=el("div","kt-grid");
+  TILES.forEach(function(x){var b=el("button","kt-tile");b.type="button";var ic=el("div","kt-ic");ic.innerHTML=SV[x[0]];b.appendChild(ic);b.appendChild(el("div","kt-lb",x[1]));b.addEventListener("click",x[2]);gr.appendChild(b)});
+  s.appendChild(gr);
+  hero.parentNode.insertBefore(s,hero.nextSibling);
+  setMsg(todayMsg());
+  return true;
+}
+var n=0,iv=setInterval(function(){if(build()||++n>200)clearInterval(iv)},300);
+})();
+
+</script>
 </body></html>
