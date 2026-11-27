@@ -321,7 +321,6 @@ Error generating stack: `+i.message+`
   <section class="sec" id="sec-xo">
     <h2>🎮 ألعاب أونلاين</h2>
     <div class="card">
-      <div class="note" style="margin:0 0 10px">العبوا مع بعض لحظة بلحظة، كل واحد من موبايله ♥️</div>
       <div style="display:flex;gap:10px"><button class="btn pri" id="xoBtn" type="button" style="margin:0;flex:1">❌⭕ إكس أو</button><button class="btn pri" id="domBtn" type="button" style="margin:0;flex:1">🁢 دومينو</button></div>
     </div>
   </section>
@@ -1670,10 +1669,33 @@ function dayLabel(ts){var d=new Date(ts),diff=Math.round((dayStart(new Date())-d
   if(diff===1)return "\u0625\u0645\u0628\u0627\u0631\u062d";
   return ar(d.getDate())+"/"+ar(d.getMonth()+1)+"/"+ar(d.getFullYear())}
 function mmss(s){s=Math.max(0,Math.round(s||0));var m=Math.floor(s/60),x=s%60;return ar(m)+":"+ar((x<10?"0":"")+x)}
+var tpVal=null,tpChange=0,tpSent=0,tpBusy=false;
+function typingNow(){return !!(tpVal&&Date.now()-tpChange<5000)}
+function tpPoll(){
+  if(!sess||!chatOpen||!visible()||tpBusy)return;
+  tpBusy=true;
+  rest("GET","presence?select=typing_at&name=eq."+other()).then(function(r){return r.json()}).then(function(a){
+    tpBusy=false;
+    if(!a||!a[0])return;
+    var v=a[0].typing_at||null;
+    if(v&&v!==tpVal)tpChange=Date.now();
+    tpVal=v;chatStatus();
+  }).catch(function(){tpBusy=false});
+}
+function tpMine(on){
+  if(!sess)return;
+  var n=Date.now();
+  if(on&&n-tpSent<2000)return;
+  tpSent=on?n:0;
+  rest("PATCH","presence?name=eq."+sess.who,{typing_at:on?new Date().toISOString():null}).catch(function(){});
+}
+setInterval(tpPoll,1500);
 function chatStatus(){
   var el=$("chatStatus");if(!el)return;
   var fresh=peer.on&&peer.t&&Date.now()-peer.t<60000,girl=other()==="O";
   var dt=$("chatDot");if(dt){dt.style.background=fresh?"#31d158":"#8a8a95"}
+  if(typingNow()){el.textContent=girl?"\u0628\u062a\u0643\u062a\u0628...":"\u0628\u064a\u0643\u062a\u0628...";el.style.color="#7fe0a0";return}
+  el.style.color="";
   if(fresh)el.textContent="\u0645\u062a\u0635\u0644"+(girl?"\u0629":"")+" \u0627\u0644\u0622\u0646";
   else if(peer.t)el.textContent=ago(Date.now()-peer.t);
   else el.textContent="";
@@ -1946,7 +1968,7 @@ function chatBuild(){
   hrt.addEventListener("click",chatSendHeart);
   snd.addEventListener("click",chatSend);mic.addEventListener("click",recStart);
   inp.addEventListener("keydown",function(e){if(e.key==="Enter")chatSend()});
-  inp.addEventListener("input",chatMode);
+  inp.addEventListener("input",function(){chatMode();tpMine(inp.value.trim().length>0&&!chatEditId)});
   bar.appendChild(inp);bar.appendChild(snd);bar.appendChild(mic);bar.appendChild(hrt);
 
   var rb=mk("div","display:none;gap:10px;padding:10px 12px;background:rgba(255,255,255,.07);align-items:center");
@@ -1977,6 +1999,7 @@ function chatShow(on){
     chatSync(true);
   }else{
     if(chatEditId)chatEditStop();
+    tpMine(false);
     chatSync();
   }
 }
@@ -2062,7 +2085,7 @@ function chatSend(){
     }).catch(function(){});
     return;
   }
-  inp.value="";chatMode();
+  inp.value="";chatMode();tpMine(false);
   chatInsert({sender:sess.who,body:v,kind:"text"}).then(function(ok){if(!ok){inp.value=v;chatMode()}}).catch(function(){inp.value=v;chatMode()});
 }
 function busy(t){var b=$("chatBusy");if(!b)return;b.style.display=t?"block":"none";b.textContent=t||""}
