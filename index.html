@@ -1693,8 +1693,23 @@ function tpMine(on){
   rest("PATCH","presence?name=eq."+sess.who,{typing_at:on?new Date().toISOString():null}).catch(function(){});
 }
 setInterval(tpPoll,1500);
+function tpBubble(){
+  var ls=$("chatList");if(!ls)return;
+  if(!document.getElementById("tpCss")){var st=document.createElement("style");st.id="tpCss";st.textContent="@keyframes tpDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}";document.head.appendChild(st)}
+  var old=document.getElementById("chatTyping"),on=typingNow()&&chatMsgs.length>=0;
+  if(!on){if(old)old.remove();return}
+  var near=ls.scrollHeight-ls.scrollTop-ls.clientHeight<120;
+  if(old){if(old.nextSibling)ls.appendChild(old)}
+  else{
+    var w=mk("div","display:flex;flex-direction:column;align-items:flex-start;margin:6px 0 2px");w.id="chatTyping";
+    var b=mk("div","display:flex;gap:5px;align-items:center;padding:13px 16px;background:rgba(255,255,255,.15);border-radius:18px 18px 18px 6px;box-shadow:0 2px 8px rgba(0,0,0,.18)");
+    for(var i=0;i<3;i++){b.appendChild(mk("span","display:block;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.85);animation:tpDot 1.2s infinite ease-in-out;animation-delay:"+(i*0.2)+"s"))}
+    w.appendChild(b);ls.appendChild(w);
+  }
+  if(near)ls.scrollTop=ls.scrollHeight;
+}
 function chatStatus(){
-  var el=$("chatStatus");if(!el)return;
+  var el=$("chatStatus");if(!el)return;tpBubble();
   var fresh=peer.on&&peer.t&&Date.now()-peer.t<60000,girl=other()==="O";
   var dt=$("chatDot");if(dt){dt.style.background=fresh?"#31d158":"#8a8a95"}
   if(typingNow()){el.textContent=girl?"\u0628\u062a\u0643\u062a\u0628...":"\u0628\u064a\u0643\u062a\u0628...";el.style.color="#7fe0a0";return}
@@ -1847,6 +1862,7 @@ function chatRender(force){
       ls.appendChild(bubble(m));
     });
   }
+  tpBubble();
   if(force||near)ls.scrollTop=ls.scrollHeight;else ls.scrollTop=top;
   chatPinBar();
 }
@@ -1917,6 +1933,42 @@ function chatMode(){
   $("chatMic").style.display=has||chatEditId?"none":"block";
 }
 function chatSigOf(a){return a.map(function(m){return m.id+"|"+m.body.length+"|"+(m.edited_at||"")+"|"+m.pinned+"|"+m.deleted+"|"+(m.seen_at||"")}).join(",")}
+function chatClearAsk(){
+  var o=mk("div","position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl");
+  var bx=mk("div","background:#1b1230;color:#fff;border-radius:18px;padding:20px;max-width:340px;width:100%;text-align:center;font-family:inherit");
+  bx.appendChild(mk("div","font-size:17px;font-weight:800;margin-bottom:8px","\ud83d\uddd1\ufe0f \u0645\u0633\u062d \u0627\u0644\u0634\u0627\u062a \u0644\u0644\u0643\u0644\u061f"));
+  var msg=mk("div","font-size:14px;line-height:1.7;color:rgba(255,255,255,.75);margin-bottom:14px","\u0647\u064a\u062a\u0645\u0633\u062d \u0643\u0644 \u0627\u0644\u0631\u0633\u0627\u064a\u0644 \u0648\u0627\u0644\u0635\u0648\u0631 \u0648\u0627\u0644\u0635\u0648\u062a\u064a\u0627\u062a \u0639\u0646\u062f\u0643 \u0648\u0639\u0646\u062f\u0647\u0627\u060c \u0648\u0645\u0634 \u0647\u062a\u0631\u062c\u0639.");
+  bx.appendChild(msg);
+  var row=mk("div","display:flex;gap:10px");
+  var no=mk("button","flex:1;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-family:inherit","\u0625\u0644\u063a\u0627\u0621");
+  var yes=mk("button","flex:1;border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:700;background:#e5484d;color:#fff;cursor:pointer;font-family:inherit","\u0646\u0639\u0645\u060c \u0627\u0645\u0633\u062d \u0627\u0644\u0643\u0644");
+  no.type="button";yes.type="button";
+  no.addEventListener("click",function(){o.remove()});
+  yes.addEventListener("click",function(){
+    yes.disabled=true;yes.textContent="...";
+    chatClearAll().then(function(left){
+      o.remove();
+      if(left>0)alert("\u0628\u0642\u0649 "+left+" \u0631\u0633\u0627\u0644\u0629 \u0645\u0627\u062a\u0645\u0633\u062d\u062a\u0634");
+    }).catch(function(){o.remove();alert("\u062d\u0635\u0644\u062a \u0645\u0634\u0643\u0644\u0629\u060c \u062c\u0631\u0628 \u062a\u0627\u0646\u064a")});
+  });
+  row.appendChild(no);row.appendChild(yes);bx.appendChild(row);o.appendChild(bx);document.body.appendChild(o);
+}
+function chatClearAll(){
+  return rest("GET","messages?select=id,media_path&limit=5000").then(function(r){return r.json()}).then(function(a){
+    if(!Array.isArray(a))throw 0;
+    var ps=a.filter(function(m){return m.media_path}).map(function(m){return delMedia(m.media_path)});
+    return Promise.all(ps);
+  }).then(function(){
+    return rest("DELETE","messages?id=gt.0");
+  }).then(function(){
+    return rest("GET","messages?select=id&limit=1000").then(function(r){return r.json()});
+  }).then(function(a){
+    var left=Array.isArray(a)?a.length:0;
+    if(!left){chatMsgs=[];chatSig="";chatLast=0;chatRender(true)}
+    else chatSync(true);
+    return left;
+  });
+}
 function chatBuild(){
   if(chatBuilt)return;chatBuilt=true;
   var fab=mk("button","position:fixed;bottom:16px;left:16px;z-index:2147482990;width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 8px 24px rgba(154,91,255,.45);display:flex;align-items:center;justify-content:center;font-family:inherit","\ud83d\udcac");
@@ -1940,6 +1992,10 @@ function chatBuild(){
   var t2=mk("div","font-size:12px;color:rgba(255,255,255,.6);min-height:15px");t2.id="chatStatus";
   nm.appendChild(t1);nm.appendChild(t2);
   hd.appendChild(back);hd.appendChild(av);hd.appendChild(nm);
+  if(sess&&sess.who==="X"){
+    var clr=mk("button","margin-inline-start:auto;background:rgba(229,72,77,.22);border:0;color:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit","\ud83d\uddd1\ufe0f \u0645\u0633\u062d \u0627\u0644\u0634\u0627\u062a \u0644\u0644\u0643\u0644");
+    clr.type="button";clr.id="chatClear";clr.addEventListener("click",chatClearAsk);hd.appendChild(clr);
+  }
 
   var pb=mk("div","display:none;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,214,102,.12);border-bottom:1px solid rgba(255,214,102,.25);font-size:13px;cursor:pointer");
   pb.id="chatPin";
