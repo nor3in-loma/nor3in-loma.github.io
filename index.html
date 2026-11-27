@@ -2709,9 +2709,6 @@ function build(){
   var b3=el("button","","🔄 رسالة تانية");b3.type="button";b3.addEventListener("click",function(){setMsg(g(randFrom(D.M)))});
   a.appendChild(b1);a.appendChild(b2);a.appendChild(b3);
   var dn=Math.floor((Date.now()-Date.UTC(2023,9,1))/864e5);var dl=el("div","kt-ref","النهارده اليوم رقم "+ar(dn)+" من حكايتنا 🤍");dl.style.marginBottom="8px";t.appendChild(hd);t.appendChild(m);t.appendChild(dl);t.appendChild(a);s.appendChild(t);
-  var gr=el("div","kt-grid");
-  TILES.forEach(function(x){var b=el("button","kt-tile");b.type="button";var ic=el("div","kt-ic");ic.innerHTML=SV[x[0]];b.appendChild(ic);b.appendChild(el("div","kt-lb",x[1]));b.addEventListener("click",x[2]);gr.appendChild(b)});
-  s.appendChild(gr);
   hero.parentNode.insertBefore(s,hero.nextSibling);
   setMsg(todayMsg());
   return true;
