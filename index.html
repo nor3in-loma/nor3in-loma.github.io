@@ -6,7 +6,7 @@ dialog.toast[open]{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);
 html,body{min-height:100%;background:#150b33}#root{min-height:100vh;min-height:100dvh}.app{min-height:100vh;min-height:100dvh}.view.center,.view.on.center{min-height:100vh;min-height:100dvh}@media (min-width:768px){.box{max-width:460px;padding:34px 30px}.dn-body{max-width:720px}}@media (min-width:1100px){.box{max-width:500px}.dn-body{max-width:820px}}@media (max-width:340px){.box{padding:22px 14px}}</style>
 <style>
 /* ===== Prayer mini box ===== */
-#sec-prayer{padding:56px 14px 0;margin:0 auto;max-width:560px;position:relative;z-index:5}
+#sec-prayer{padding:0 14px;margin:0 auto;max-width:560px;position:relative;z-index:5}
 #sec-prayer .pr-card{position:relative;overflow:hidden;border-radius:18px;padding:9px 12px;color:#fff;text-align:right;max-width:520px;margin:0 auto;
 background:linear-gradient(155deg,#22d191 0%,#13ad74 45%,#0a8a5b 100%);
 box-shadow:0 10px 22px -14px rgba(10,138,91,.9),inset 0 1px 0 rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.2)}
@@ -128,28 +128,7 @@ Error generating stack: `+i.message+`
 
 <div class="view" id="home">
 <main>
-    <section class="sec" id="sec-prayer">
-    <div class="pr-card" id="prCard" dir="rtl">
-      <div class="pr-in">
-        <div class="pr-row">
-          <span class="pr-emoji">🕌</span>
-          <div class="pr-mid">
-            <div class="pr-lbl"><i id="prIcon">🌤️</i><span>صلاة <span id="prName">—</span></span><span class="pr-time"><b id="prClock">--:--</b><small id="prAmpm"></small></span></div>
-            <div class="pr-city" id="prCity">—</div>
-            <span id="prNextName" hidden></span>
-          </div>
-          <span class="pr-timer" id="prTimer">--:--:--</span>
-          <button class="pr-more" id="prMore" type="button" aria-expanded="false" aria-label="كل المواقيت">▾</button>
-        </div>
-        <div class="pr-detail" id="prDetail" hidden>
-          <div class="pr-hijri" id="prHijri">—</div>
-          <div class="pr-times" id="prTimes"></div>
-          <div class="pr-extra" id="prExtra"></div>
-        </div>
-        <div class="pr-note" id="prNote" hidden></div>
-      </div>
-    </div>
-  </section>
+
 
 <header class="hero" id="hero">
     <div class="hstars" id="hstars" aria-hidden="true"></div>
@@ -177,6 +156,29 @@ Error generating stack: `+i.message+`
       <button class="btn pri" id="adhkarBtn" style="margin-top:0">🌅 أذكار الصباح والمساء</button>
       <button class="btn pri" id="quranBtn">📖 القرآن الكريم كامل</button>
       <button class="btn pri" id="tasbeehBtn" type="button">📿 السبحة</button>
+    </div>
+  </section>
+
+    <section class="sec" id="sec-prayer">
+    <div class="pr-card" id="prCard" dir="rtl">
+      <div class="pr-in">
+        <div class="pr-row">
+          <span class="pr-emoji">🕌</span>
+          <div class="pr-mid">
+            <div class="pr-lbl"><i id="prIcon">🌤️</i><span>صلاة <span id="prName">—</span></span><span class="pr-time"><b id="prClock">--:--</b><small id="prAmpm"></small></span></div>
+            <div class="pr-city" id="prCity">—</div>
+            <span id="prNextName" hidden></span>
+          </div>
+          <span class="pr-timer" id="prTimer">--:--:--</span>
+          <button class="pr-more" id="prMore" type="button" aria-expanded="false" aria-label="كل المواقيت">▾</button>
+        </div>
+        <div class="pr-detail" id="prDetail" hidden>
+          <div class="pr-hijri" id="prHijri">—</div>
+          <div class="pr-times" id="prTimes"></div>
+          <div class="pr-extra" id="prExtra"></div>
+        </div>
+        <div class="pr-note" id="prNote" hidden></div>
+      </div>
     </div>
   </section>
 
