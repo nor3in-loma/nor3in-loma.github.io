@@ -1658,7 +1658,7 @@ function start(){
 }
 
 /* ---------- private chat ---------- */
-var chatOpen=false,chatLast=0,chatBuilt=false,chatMsgs=[],chatSig="",chatEditId=0,chatPinIx=0,chatAnchored=false,chatToastT=null;
+var chatOpen=false,chatLast=0,chatBuilt=false,chatMsgs=[],chatSig="",chatEditId=0,chatSeenId=0,chatPinIx=0,chatAnchored=false,chatToastT=null;
 var BUCKET="chat-media",MAXMB=10;
 var blobCache={},curAudio=null,curAudioId=0;
 function chatRead(){try{return parseInt(localStorage.getItem("nlChatRead")||"0",10)||0}catch(e){return 0}}
@@ -1787,6 +1787,10 @@ function bubble(m){
   var meta=mk("div","display:flex;align-items:center;gap:6px;margin:3px 8px 0;font-size:11px;color:rgba(255,255,255,.45)");
   if(m.pinned&&!m.deleted)meta.appendChild(mk("span",null,"\ud83d\udccc"));
   meta.appendChild(mk("span",null,hms(m.created_at)+(m.edited_at&&!m.deleted?" \u00b7 \u0645\u0639\u062f\u0644\u0629":"")));
+  if(mine&&!m.deleted){
+    if(m.id===chatSeenId&&m.seen_at)meta.appendChild(mk("span","color:#7fd1ff;font-weight:700","\ud83d\udc41 \u062a\u0645 \u0627\u0644\u0645\u0634\u0627\u0647\u062f\u0629 "+hms(m.seen_at)));
+    else if(!m.seen_at)meta.appendChild(mk("span",null,"\u2713"));
+  }
   if(!m.deleted){
     var mb=mk("button","background:none;border:0;color:rgba(255,255,255,.55);font-size:16px;cursor:pointer;padding:0 4px;font-family:inherit","\u22ef");
     mb.type="button";mb.addEventListener("click",function(ev){ev.stopPropagation();chatMenu(m)});
@@ -1808,6 +1812,7 @@ function chatRender(force){
   var ls=$("chatList");if(!ls)return;
   var near=ls.scrollHeight-ls.scrollTop-ls.clientHeight<120,top=ls.scrollTop;
   ls.textContent="";
+  chatSeenId=0;chatMsgs.forEach(function(m){if(m.sender===sess.who&&m.seen_at&&!m.deleted)chatSeenId=m.id});
   if(!chatMsgs.length){ls.appendChild(chatEmptyEl())}
   else{
     var lastDay=null;
@@ -1887,7 +1892,7 @@ function chatMode(){
   $("chatMic").style.display=has||chatEditId?"none":"block";
   $("chatAtt").style.display=chatEditId?"none":"block";
 }
-function chatSigOf(a){return a.map(function(m){return m.id+"|"+m.body.length+"|"+(m.edited_at||"")+"|"+m.pinned+"|"+m.deleted}).join(",")}
+function chatSigOf(a){return a.map(function(m){return m.id+"|"+m.body.length+"|"+(m.edited_at||"")+"|"+m.pinned+"|"+m.deleted+"|"+(m.seen_at||"")}).join(",")}
 function chatBuild(){
   if(chatBuilt)return;chatBuilt=true;
   var fab=mk("button","position:fixed;bottom:16px;left:16px;z-index:2147482990;width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 8px 24px rgba(154,91,255,.45);display:flex;align-items:center;justify-content:center;font-family:inherit","\ud83d\udcac");
@@ -1978,7 +1983,7 @@ function chatShow(on){
     chatSync();
   }
 }
-var MSGSEL="messages?select=id,sender,body,created_at,kind,media_path,dur,edited_at,pinned,deleted&order=id.desc&limit=150";
+var MSGSEL="messages?select=id,sender,body,created_at,kind,media_path,dur,edited_at,pinned,deleted,seen_at&order=id.desc&limit=150";
 function chatSync(forceScroll){
   if(!sess||!visible())return;
   rest("GET",MSGSEL).then(function(r){return r.json()}).then(function(a){
@@ -1992,7 +1997,7 @@ function chatSync(forceScroll){
       a.forEach(function(m){if(m.sender!==sess.who&&m.id>read&&!m.deleted)n++});
       if(!chatOpen)chatBadge(n);
       chatAnchored=true;chatLast=mx;chatMsgs=a;chatSig=sig;
-      if(chatOpen){chatSetRead(mx);chatRender(true)}
+      if(chatOpen){chatSetRead(mx);chatRender(true);chatMarkSeen()}
       return;
     }
     var fresh=a.filter(function(m){return m.id>prevLast&&m.sender!==sess.who&&!m.deleted});
@@ -2001,9 +2006,16 @@ function chatSync(forceScroll){
       chatMsgs=a;chatSig=sig;
       if(chatOpen)chatRender(forceScroll===true);
     }
-    if(chatOpen){chatSetRead(chatLast);chatBadge(0)}
+    if(chatOpen){chatSetRead(chatLast);chatBadge(0);chatMarkSeen()}
     else if(fresh.length){chatBadgeInc(fresh.length);var lm=fresh[fresh.length-1];chatToast(ACC[lm.sender].name,prevOf(lm))}
   }).catch(function(){});
+}
+var markBusy=false;
+function chatMarkSeen(){
+  if(!chatOpen||!visible()||markBusy||!sess)return;
+  if(!chatMsgs.some(function(m){return m.sender!==sess.who&&!m.seen_at&&!m.deleted}))return;
+  markBusy=true;
+  api("PATCH","messages?sender=eq."+other()+"&seen_at=is.null",{seen_at:new Date().toISOString()}).then(function(){markBusy=false}).catch(function(){markBusy=false});
 }
 function chatHideToast(){var t=$("chatToast");if(t)t.style.top="-130px"}
 function chatToast(name,preview){
