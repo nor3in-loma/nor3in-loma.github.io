@@ -1826,14 +1826,19 @@ function chatToast(name,preview){
   var t=$("chatToast");
   if(!t){
     t=document.createElement("div");t.id="chatToast";
-    t.setAttribute("style","position:fixed;top:-130px;left:50%;transform:translateX(-50%);z-index:2147482996;min-width:220px;max-width:86vw;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;padding:12px 18px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45);direction:rtl;font-family:inherit;cursor:pointer;transition:top .35s ease");
+    t.setAttribute("style","position:fixed;top:-130px;left:50%;transform:translateX(-50%);z-index:2147482996;display:flex;align-items:center;gap:10px;min-width:240px;max-width:86vw;background:rgba(30,20,50,.95);color:#fff;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);direction:rtl;font-family:inherit;cursor:pointer;transition:top .35s ease;border:1px solid rgba(255,255,255,.15)");
     t.addEventListener("click",function(){chatHideToast();chatShow(true)});
     document.body.appendChild(t);
   }
   t.textContent="";
-  var n=document.createElement("div");n.textContent=name;n.setAttribute("style","font-weight:800;font-size:14px;margin-bottom:2px");
-  var p=document.createElement("div");p.textContent=preview;p.setAttribute("style","font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw");
-  t.appendChild(n);t.appendChild(p);
+  var av=document.createElement("div");
+  av.textContent=name.charAt(0);
+  av.setAttribute("style","width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff6fa5,#9a5bff);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex:none");
+  var col=document.createElement("div");col.setAttribute("style","min-width:0;flex:1");
+  var n=document.createElement("div");n.textContent=name;n.setAttribute("style","font-weight:800;font-size:14px");
+  var p=document.createElement("div");p.textContent=preview;p.setAttribute("style","font-size:13px;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64vw");
+  col.appendChild(n);col.appendChild(p);
+  t.appendChild(av);t.appendChild(col);
   requestAnimationFrame(function(){t.style.top="14px"});
   if(chatToastT)clearTimeout(chatToastT);
   chatToastT=setTimeout(chatHideToast,6000);
