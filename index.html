@@ -6,7 +6,7 @@ dialog.toast[open]{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);
 html,body{min-height:100%;background:#150b33}#root{min-height:100vh;min-height:100dvh}.app{min-height:100vh;min-height:100dvh}.view.center,.view.on.center{min-height:100vh;min-height:100dvh}@media (min-width:768px){.box{max-width:460px;padding:34px 30px}.dn-body{max-width:720px}}@media (min-width:1100px){.box{max-width:500px}.dn-body{max-width:820px}}@media (max-width:340px){.box{padding:22px 14px}}</style>
 <style>
 /* ===== Prayer mini box ===== */
-#sec-prayer{padding:10px 14px 0;margin:0 auto;max-width:560px;position:relative;z-index:5}
+#sec-prayer{padding:56px 14px 0;margin:0 auto;max-width:560px;position:relative;z-index:5}
 #sec-prayer .pr-card{position:relative;overflow:hidden;border-radius:18px;padding:9px 12px;color:#fff;text-align:right;max-width:520px;margin:0 auto;
 background:linear-gradient(155deg,#22d191 0%,#13ad74 45%,#0a8a5b 100%);
 box-shadow:0 10px 22px -14px rgba(10,138,91,.9),inset 0 1px 0 rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.2)}
@@ -1665,7 +1665,6 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 </script>
 <script>
 (function(){
-  var card=document.getElementById('prCard'); if(!card) return;
   var CITIES={
     X:{lat:27.1810,lon:31.1837,tune:'0,0,0,0,-1,0,0,0,0',name:'أسيوط · مصر',key:'prCal_v4_assiut'},
     O:{lat:30.5503,lon:31.0090,tune:'0,1,0,0,-1,0,0,0,0',name:'المنوفية · مصر',key:'prCal_v4_menoufia'}
@@ -1753,6 +1752,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     return h;
   }
   function render(){
+    if(!document.getElementById('prName')) return;
     var n=nowTZ(), k=kOf(n.y,n.m,n.d), t=days[k];
     if(!t){
       note('بجيب مواقيت النهاردة...');
@@ -1792,7 +1792,22 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
     });
     $('prExtra').innerHTML=ex;
   }
-  function boot(){
+  var card=null, started=false;
+  function bind(){
+    var c=document.getElementById('prCard');
+    if(!c) return false;
+    if(c!==card){
+      card=c;
+      var btn=$('prMore');
+      if(btn) btn.addEventListener('click',function(){
+        var ex=$('prDetail'); if(!ex) return;
+        var open=!ex.hidden;
+        ex.hidden=open;btn.classList.toggle('open',!open);btn.setAttribute('aria-expanded',String(!open));
+      });
+    }
+    return true;
+  }
+  function bootData(){
     load();
     var n=nowTZ(), k=kOf(n.y,n.m,n.d);
     if(!days[k]) fetchMonth(n.y,n.m);
@@ -1800,8 +1815,13 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       var tm=tomorrow(n);
       if(n.d>=27&&!hasMonth(tm.y,tm.m)) fetchMonth(tm.y,tm.m);
     }
+    applyCity();
     render();
+  }
+  function start(){
+    if(started) return; started=true;
     setInterval(function(){
+      if(!bind()) return;
       if(whoNow()!==curWho){applyCity();days={};lastRow='';busy=false;failAt=0;load();var c=nowTZ();if(!days[kOf(c.y,c.m,c.d)])fetchMonth(c.y,c.m);}
       render();
     },1000);
@@ -1810,13 +1830,15 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
       if(!days[ck]&&!busy) fetchMonth(c.y,c.m);
       else if(c.h===0&&c.mi===0&&!hasMonth(c.y,c.m)&&!busy) fetchMonth(c.y,c.m);
     },60000);
-    var btn=$('prMore');
-    btn.addEventListener('click',function(){
-      var ex=$('prDetail'), open=!ex.hidden;
-      ex.hidden=open;btn.classList.toggle('open',!open);btn.setAttribute('aria-expanded',String(!open));
-    });
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  function kick(){
+    if(bind()){ bootData(); start(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(bind()){ clearInterval(iv); bootData(); start(); }
+      else if(++tries>300) clearInterval(iv);
+    },300);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',kick); else kick();
 })();
 </script>
 </body></html>
