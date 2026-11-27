@@ -1801,7 +1801,15 @@ function chatPoll(){
   rest("GET",q).then(function(r){return r.json()}).then(function(a){
     chatStatus();
     if(!Array.isArray(a)||!a.length)return;
-    if(!chatLast){chatLast=a[a.length-1].id;return}
+    if(!chatLast){
+      chatLast=a[a.length-1].id;
+      var lm=a[a.length-1];
+      if(chatAnchored&&lm.sender!==sess.who&&lm.id>chatRead()&&!chatOpen){
+        chatBadgeInc(1);
+        chatToast(ACC[lm.sender].name,chatPrev(lm.body));
+      }
+      return;
+    }
     chatLast=a[a.length-1].id;
     if(chatOpen){
       chatEmptyOff();
@@ -1811,7 +1819,7 @@ function chatPoll(){
       var n=0,lastOther=null;
       a.forEach(function(m){if(m.sender!==sess.who){n++;lastOther=m}});
       chatBadgeInc(n);
-      if(lastOther)chatToast(ACC[lastOther.sender].name,lastOther.body.length>60?lastOther.body.slice(0,60)+"\u2026":lastOther.body);
+      if(lastOther)chatToast(ACC[lastOther.sender].name,chatPrev(lastOther.body));
     }
   }).catch(function(){});
 }
@@ -1820,7 +1828,8 @@ function chatBadgeInc(n){
   var b=$("chatBadge");if(!b)return;
   chatBadge((parseInt(b.dataset.n||"0",10)||0)+n);
 }
-var chatToastT=null;
+var chatToastT=null,chatAnchored=false;
+function chatPrev(b){return b.length>60?b.slice(0,60)+"\u2026":b}
 function chatHideToast(){var t=$("chatToast");if(t)t.style.top="-130px"}
 function chatToast(name,preview){
   var t=$("chatToast");
@@ -1862,9 +1871,15 @@ function chatSend(){
 function chatInit(){
   if($("chatFab"))return;
   chatBuild();
-  rest("GET","messages?select=id,sender&sender=neq."+sess.who+"&id=gt."+chatRead()+"&order=id.asc").then(function(r){return r.json()}).then(function(a){
-    if(Array.isArray(a))chatBadgeSet(a.length);
-  }).catch(function(){});
+  rest("GET","messages?select=id,sender&order=id.desc&limit=100").then(function(r){return r.json()}).then(function(a){
+    if(Array.isArray(a)&&a.length){
+      chatLast=a[0].id;
+      var read=chatRead(),n=0;
+      a.forEach(function(m){if(m.sender!==sess.who&&m.id>read)n++});
+      chatBadge(n);
+    }
+    chatAnchored=true;
+  }).catch(function(){chatAnchored=true});
   setInterval(chatPoll,4000);
   document.addEventListener("visibilitychange",function(){if(visible())chatPoll()});
 }
