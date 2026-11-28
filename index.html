@@ -1535,6 +1535,7 @@ function gate(){
   var go=document.createElement("button");go.type="button";go.id="nlGo";go.textContent="دخول";
   go.setAttribute("style",st+"width:100%;background:linear-gradient(135deg,#ff6fa5,#9a5bff);color:#fff;border:0");
   var er=document.createElement("div");er.id="nlErr";er.setAttribute("style","min-height:22px;margin:10px 0;color:#ffb3c8;font-weight:700;font-size:14px");
+  try{if(localStorage.getItem("nlKick")){localStorage.removeItem("nlKick");er.textContent="الحساب اتفتح من جهاز تاني، فاتخرجت من هنا 📵"}}catch(e){}
   var tg=document.createElement("button");tg.type="button";tg.id="nlToggle";tg.textContent="أول مرة؟ اعمل حسابك";
   tg.setAttribute("style","background:none;border:0;color:#cdb8ff;text-decoration:underline;font-family:inherit;font-size:14px;cursor:pointer");
   tg.addEventListener("click",function(){
@@ -1552,7 +1553,16 @@ function gate(){
     var who=pick,email=ACC[who].email,pw=p1.value;
     function login(){
       return auth("token?grant_type=password",{email:email,password:pw}).then(function(r){
-        if(r.ok&&r.j.access_token){saveSess(fromTok(r.j,who));location.reload();return}
+        if(r.ok&&r.j.access_token){
+          saveSess(fromTok(r.j,who));
+          return lockRead().then(function(row){
+            if(lockFresh(row)&&!devMatch(row.device_id,DEV)){clearSess();return fail(who==="O"?"الحساب ده مفتوح دلوقتي على جهاز تاني، اقفليه من هناك الأول 📵":"الحساب ده مفتوح دلوقتي على جهاز تاني، اقفله من هناك الأول 📵")}
+            return lockClaim().then(function(ok){
+              if(!ok){clearSess();return fail("الحساب اتفتح من جهاز تاني دلوقتي، جرب بعد شوية")}
+              location.reload();
+            });
+          });
+        }
         if(r.j&&r.j.error_code==="invalid_credentials")return fail("الباسورد غلط");
         fail("حصلت مشكلة، جرب تاني");
       });
@@ -1602,7 +1612,7 @@ function pill(){
     lo.setAttribute("style","margin-inline-start:6px;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:999px;padding:3px 10px;font-size:12px;font-family:inherit;cursor:pointer");
     lo.addEventListener("click",function(){
       var done=function(){clearSess();location.reload()};
-      send(false,true).then(done,done);
+      send(false,true);lockRelease().then(done,done);
     });
     b.style.cursor="pointer";b.style.userSelect="none";b.style.webkitUserSelect="none";b.style.touchAction="manipulation";
     var menu=null;
@@ -1618,7 +1628,7 @@ function pill(){
         menu.textContent="";
         var q=document.createElement("div");q.textContent="تسجيل الخروج من هذا الجهاز؟";q.setAttribute("style","font-size:14px;font-weight:700;margin-bottom:2px");
         menu.appendChild(q);
-        menu.appendChild(mk("نعم، خروج","background:#e5484d;color:#fff;",function(){var done=function(){clearSess();location.reload()};send(false,true).then(done,done)}));
+        menu.appendChild(mk("نعم، خروج","background:#e5484d;color:#fff;",function(){var done=function(){clearSess();location.reload()};send(false,true);lockRelease().then(done,done)}));
         menu.appendChild(mk("إلغاء","background:rgba(255,255,255,.18);color:#fff;",closeMenu));
       };
       menu.appendChild(mk("خروج","background:rgba(255,255,255,.18);color:#fff;",showOut));
@@ -1649,6 +1659,32 @@ function poll(){
     if(a&&a[0]){peer={on:!!a[0].online,t:Date.parse(a[0].last_seen)||0};render()}
   }).catch(function(){});
 }
+/* ---------- one device per account ---------- */
+function h36(s){var h=0x811c9dc5;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h*0x01000193)>>>0}return h.toString(36)}
+var DEV=(function(){
+  try{
+    var scr=window.screen||{},ua=navigator.userAgent||"",model="",m=ua.match(/Android\s+[\d.]+;\s*([^;)]+)/i);
+    if(m){model=m[1].replace(/\s+Build.*$/i,"").trim().toLowerCase();if(/^(mobile|tablet|wv|linux|k)$/.test(model))model=""}
+    else if(/iPad/i.test(ua))model="ipad";else if(/iPhone|iPod/i.test(ua))model="iphone";
+    var core=[scr.width,scr.height,scr.colorDepth,window.devicePixelRatio||1,navigator.hardwareConcurrency||"",navigator.maxTouchPoints||0,(Intl.DateTimeFormat().resolvedOptions().timeZone||"")].join("|");
+    return h36(core)+"."+(model?h36(model):"")+"."+(navigator.deviceMemory?h36(String(navigator.deviceMemory)):"");
+  }catch(e){return "x..x"}
+})();
+function devMatch(stored,mine){
+  if(!stored||!mine)return false;
+  var x=stored.split("."),y=mine.split(".");
+  if(x[0]!==y[0])return false;
+  for(var i=1;i<=2;i++){if(x[i]&&y[i]&&x[i]!==y[i])return false}
+  return true;
+}
+var LOCK_STALE=120000;
+function lockRead(){return rest("GET","presence?select=device_id,lock_at&name=eq."+sess.who).then(function(r){return r.json()}).then(function(a){return a&&a[0]?a[0]:null}).catch(function(){return null})}
+function lockFresh(row){return !!(row&&row.device_id&&row.lock_at&&Date.now()-Date.parse(row.lock_at)<LOCK_STALE)}
+function lockWrite(){return rest("POST","presence?on_conflict=name",{name:sess.who,device_id:DEV,lock_at:new Date().toISOString()}).catch(function(){})}
+function lockClaim(){return lockWrite().then(function(){return lockRead()}).then(function(row){return!row||devMatch(row.device_id,DEV)}).catch(function(){return true})}
+function lockRelease(){if(!sess)return Promise.resolve();return rest("PATCH","presence?name=eq."+sess.who+"&device_id=eq."+DEV,{device_id:null,lock_at:null}).catch(function(){})}
+function kickOut(){try{localStorage.setItem("nlKick","1")}catch(e){}clearSess();location.reload()}
+function lockBeat(){if(!sess)return;lockRead().then(function(row){if(lockFresh(row)&&!devMatch(row.device_id,DEV)){kickOut();return}lockWrite()})}
 function beat(){ if(visible())send(true) }
 function start(){
   if(started)return;started=true;
@@ -2312,8 +2348,11 @@ function chatInit(){
 function init(){
   sess=loadSess();
   if(!sess){gate();return}
-  try{localStorage.setItem("xoWho",sess.who)}catch(e){}
-  start();
+  lockRead().then(function(row){
+    if(lockFresh(row)&&!devMatch(row.device_id,DEV)){kickOut();return}
+    try{localStorage.setItem("xoWho",sess.who)}catch(e){}
+    start();lockBeat();setInterval(lockBeat,15000);
+  });
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
